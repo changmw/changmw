@@ -1,0 +1,538 @@
+<html><head/>
+<body>
+<center><h2>IPtables Firewall Script</h2></center>
+<textarea rows="550" cols="100">
+#!/bin/bash
+# bibliography:
+#
+# 1. "Taming the Wild Netfilter", Sept 2001, http://www.linuxjournal.com
+# 2. ipchains script rc.firewall.hunley, section security, http://linux.nf
+# 3. iptables tutorial, http://www.ibm.com/developerworks
+# 4. http://www.cs.princeton.edu/~jns/security/iptables/index.html
+# 5. http://support.microsoft.com/default.aspx?scid=kb;EN-US;q240429
+# 6. http://www.netfilter.org/documentation/HOWTO//packet-filtering-HOWTO-6.html 
+# 7. http://iptables-tutorial.frozentux.net/iptables-tutorial.html
+# syn-flood control have have draw-backs, notably to p2p protocols that
+# relied on icmp-requests
+#
+#                           _____
+# Incoming                 /     \         Outgoing
+#        -->[Routing ]--->|FORWARD|------->
+#           [Decision]     \_____/        ^
+#                |                        |
+#                v                      ____
+#               ___                    /    \
+#              /   \                  |OUTPUT|
+#             |INPUT|                  \____/
+#              \___/                      ^
+#                |                        |
+#                 ----> Local Process ----
+#
+# to test the firewall
+# http://www.earth.li/projectpurple/progs/sendip.html
+
+# to ban IP:   iptables -I input -s $TARGET$ -j DROP
+# to list active iptables chains: iptables -L -n --line-numbers
+# to delete an iptables chain:    iptables -D <chain> <line-number>
+
+# Source function library. 
+#
+# /proc/net/ip_conntrack | wc -l
+# /proc/sys/net/ipv4/ip_conntrack_max
+# vi /usr/src/linux-2.4.26/net/ipv4/netfilter/ip_conntrack_proto_tcp.c
+# search for established
+
+# . /etc/rc.d/init.d/functions 
+export LC_ALL=C
+
+# logfile="/var/log/messages"
+logfile="/var/log/router.log"
+
+IPT=`which iptables`
+if [ -f /usr/local/sbin/iptables ] ; then
+IPT=/usr/local/sbin/iptables
+fi
+
+# this is my external interface 
+# for I-Cable(HK), eth1; for IMS, ppp0
+OUTIF=eth0
+OUTIP=`ifconfig $OUTIF | grep inet | cut -d : -f 2 | cut -d " " -f 1` 
+OUTMASK=`ifconfig $OUTIF | grep Mas | cut -d : -f 4` 
+OUTNET=$OUTIP/$OUTMASK 
+
+# this is my internal network interface
+INTIF=eth0
+INTIP=`ifconfig $INTIF | grep inet | cut -d : -f 2 | cut -d " " -f 1` 
+INTMASK=`ifconfig $INTIF | grep Mas | cut -d : -f 4` 
+INTNET=$INTIP/$INTMASK 
+
+# this is my dial-in network interface
+DIALINIF=ppp1
+# DIALINIP=`ifconfig $DIALINIF | grep inet | cut -d : -f 2 | cut -d " " -f 1` 
+# DIALINMASK=`ifconfig $DIALINIF | grep Mas | cut -d : -f 4` 
+DIALINIP="192.168.2.50"
+DIALINMASK="255.255.255.0"
+DIALINNET=$DIALINIP/$DIALINMASK 
+
+PING_FLOOD="1/s"
+BAD_ICMP="5 9 10 15 16 17 18"
+
+# squid proxy, default 3128
+SQUID="3128"
+SQUID=""
+
+CLASS_A="10.0.0.0/8" 
+CLASS_B="172.16.0.0/12" 
+CLASS_C="192.168.0.0/16" 
+CLASS_D_MULTICAST="224.0.0.0/4" 
+CLASS_E_RESERVED_NET="240.0.0.0/5" 
+
+# privileged ports
+P_PORTS="0:1023" 
+UP_PORTS="1024:65535" 
+TR_SRC_PORTS="32769:65535" 
+TR_DEST_PORTS="33434:33523" 
+
+# I opened these ports. if you don't, 
+# set the following 2 variables to empty space, ie ""
+# you will need accept traffic for port forwarding ports.
+# 22 - ssh
+# 1723 - vpn
+# 4662,4672 - emule
+# 6667 - irc
+# 6890 - rtorrent
+# 9966 - bttrack.py
+# 3000 - ntop
+# 7002,5273,udp(27010,27012,27015) - cs 1.6 server
+AA_UDP="1716 1717 1718 8777 27900"
+AA_TCP="14200 20025 20026 20027 20028 20029 20030 20031 20032 20033 20034 20035 20036 20037 20038 20039 20040 20041 20042 20043 20045 20046 20047 20048 28910"
+TCP_OPEN="20 21 25 80 143 4662 4665 4672 5273 6881 6890 7002 8080 22022"
+TCP_ALL_OPEN="6890"
+UDP_OPEN=" 4672 6881"
+PASSIVEFTP="65000:65535"
+
+#this part came from http://linux.nf
+REMOTENET=0/0
+
+# copied from the article
+# load modules
+modprobe ip_tables
+modprobe ipt_recent
+# modprobe ipt_TARPIT
+modprobe ip_nat_ftp
+modprobe ipt_TCPMSS
+
+function myrules {
+  echo "setting my rules"
+  # create my own logdrop chain
+  # you may prefer to log only "-m state --state NEW,INVALID"
+  $IPT -N logdrop
+  $IPT -A logdrop -j LOG -m limit --limit 1/m \
+	--log-tcp-options --log-ip-options --log-prefix '[IPTABLES DROP] : '
+  # according to ibm's article, this could fool hackers into believing
+  # that there are actually no service activated at my ports.
+  # a side effect is to quickly abort any ident calls.
+  $IPT -A logdrop -p tcp -j REJECT --reject-with tcp-reset
+  $IPT -A logdrop -p udp -j REJECT --reject-with icmp-port-unreachable
+  # for speed, you may just drop it.
+  # TARPIT if possible
+  # $IPT -A logdrop -p tcp -j TARPIT
+	$IPT -A logdrop -j DROP
+
+  #Flood protection for ftp server
+  $IPT -N syn-flood 
+  $IPT -A syn-flood -m limit --limit 1/s --limit-burst 4 -j RETURN 
+  $IPT -A syn-flood -j logdrop
+  $IPT -t filter -N norm
+  $IPT -A norm -i ! $OUTIF -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+  $IPT -A norm -i $OUTIF -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+  $IPT -N SSH_WHITELIST
+  $IPT -A SSH_WHITELIST -s 192.168.1.2 -m recent --remove --name SSH -j ACCEPT
+  return 0
+}
+
+# note: policies must be resetted carefully 
+function flushrules {
+  echo "flush all tables and reset policies"
+  for i in filter nat mangle
+  do
+    $IPT -t $i -F
+    $IPT -t $i -X
+    $IPT -t $i -Z
+  done
+  $IPT -t filter -P INPUT ACCEPT
+  $IPT -t filter -P OUTPUT ACCEPT
+  $IPT -t filter -P FORWARD ACCEPT
+  $IPT -t nat -P PREROUTING ACCEPT
+  $IPT -t nat -P POSTROUTING ACCEPT
+  $IPT -t nat -P OUTPUT ACCEPT
+  $IPT -t mangle -P PREROUTING ACCEPT
+  $IPT -t mangle -P OUTPUT ACCEPT
+  return 0
+}
+
+case "$1" in
+flush)
+echo "Flushing all rules"
+flushrules 
+exit 0
+;;
+start)
+echo "Starting firewall:"
+
+flushrules
+myrules
+
+# web servers for public use:
+# WEB=192.168.0.2-192.168.0.6:80
+# if the above or below is a range of servers, netfilter will perform
+# a rudimentary form of load balancing
+# DNS servers:
+# DNS=192.168.0.8-192.168.0.9:53
+
+# first, turn off forwarding
+# to guarantee no attack when the firewall is not yet ready
+echo 0 > /proc/sys/net/ipv4/ip_forward
+
+#this part came from http://linux.nf
+# Turn on Source Address Verification 
+if [ -e /proc/sys/net/ipv4/conf/all/rp_filter ] 
+then 
+echo -e "\tDisabling IP Spoofing" 
+for f in /proc/sys/net/ipv4/conf/*/rp_filter 
+do 
+echo 1 > $f 
+done 
+fi 
+
+# Turn on SYN COOKIES PROTECTION (Thanks Holger!) 
+if [ -e /proc/sys/net/ipv4/tcp_syncookies ] 
+then 
+echo -e "\tEnabling TCP SYN Cookie protection" 
+echo 1 > /proc/sys/net/ipv4/tcp_syncookies 
+fi 
+
+# Enable ICMP broadcast echo (may affect samba)
+echo 0 > /proc/sys/net/ipv4/icmp_echo_ignore_all
+
+# Turn on ICMP sanity checks 
+if [ -e /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts ] 
+then 
+echo -e "\tDisabling replies to ICMP echo broadcasts" 
+# this may affect idle detection
+echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts 
+fi 
+
+# Enable bad error message protection 
+if [ -e /proc/sys/net/ipv4/icmp_ignore_bogus_error_responses ] 
+then 
+echo -e "\tEnable 'bad error message' protection" 
+echo 1 > /proc/sys/net/ipv4/icmp_ignore_bogus_error_responses 
+fi 
+
+# Disable ICMP Redirects 
+if [ -e /proc/sys/net/ipv4/conf/all/accept_redirects ] 
+then 
+echo -e "\tDisabling ICMP redirects" 
+for i in /proc/sys/net/ipv4/conf/*/accept_redirects 
+do 
+echo 0 > $i 
+done 
+fi 
+
+# Disable source-routed packets 
+if [ -e /proc/sys/net/ipv4/conf/all/accept_source_route ] 
+then 
+echo -e "\tDisabling source-routed packets" 
+for i in /proc/sys/net/ipv4/conf/*/accept_source_route 
+do 
+echo 0 > $i 
+done 
+fi 
+
+# Log spoofed, source-routed, or redirected packets 
+if [ -e /proc/sys/net/ipv4/conf/all/log_martians ] 
+then 
+echo -e "\tTurning on logging of 'Martian' packets" 
+for i in /proc/sys/net/ipv4/conf/*/log_martians 
+do 
+echo 1 > $i 
+done 
+fi 
+
+#explicitly enable ECN
+# some software may need ecn to be disabled...
+# also, there may be problems from broken firewalls
+if [ -e /proc/sys/net/ipv4/tcp_ecn ]
+then
+echo 0 > /proc/sys/net/ipv4/tcp_ecn
+fi
+
+# default policy
+$IPT -P INPUT DROP
+$IPT -P FORWARD ACCEPT
+# $IPT -t filter -I FORWARD -p tcp --tcp-flags SYN,RST,ACK SYN -j TCPMSS --set-mss 1280
+# $IPT -t filter -I FORWARD -p tcp --tcp-flags SYN,RST,ACK SYN,ACK -j TCPMSS --set-mss 1280 
+# $IPT -A FORWARD -p tcp --tcp-flags SYN,RST SYN -m tcpmss --mss 1280:1536 -j TCPMSS --clamp-mss-to-pmtu
+
+# transparent proxy or redirection into squid
+if [ -n "$SQUID" ]; then
+  echo -e "\tTransparent proxy to port $SQUID"
+  $IPT -t nat -A PREROUTING -i $INTIF -p tcp --dport 80 -j REDIRECT --to-port $SQUID
+#  $IPT -t nat -A PREROUTING -i lo -p tcp --dport 80 -j REDIRECT --to-port $SQUID
+fi
+
+$IPT -A INPUT -j norm
+# $IPT -A FORWARD -j ACCEPT
+
+#allow computer to talk to itself
+${IPT} -A INPUT -i lo -j ACCEPT
+
+$IPT -A INPUT -i $INTIF -p tcp --dport 3306 -j ACCEPT
+
+## ports opened to the world
+echo -e -n "\tOpening TCP ports that accepts ALL ..."
+for port in $TCP_ALL_OPEN
+do
+ echo -n " " ${port}
+ $IPT -A INPUT -i $OUTIF -p tcp --dport $port -j ACCEPT
+done
+echo
+## ports opened to the world
+echo -e -n "\tOpening TCP ports that accepts NEW, RELATED ..."
+for port in $TCP_OPEN
+do
+ echo -n " " ${port}
+ $IPT -A INPUT -i $OUTIF -p tcp --dport $port -m state --state NEW,RELATED -j ACCEPT
+done
+echo
+echo -e -n "\tOpening TCP ports for AA ..."
+for port in $AA_TCP
+do
+ echo -n " " ${port}
+ $IPT -A INPUT -i $OUTIF -p tcp --dport $port -j ACCEPT
+done
+echo
+echo -e -n "\tOpening UDP ports ..."
+for port in $UDP_OPEN
+do
+ echo -n " " ${port}
+ $IPT -A INPUT -i $OUTIF -p udp --dport $port -m state --state NEW,RELATED -j ACCEPT
+done
+echo
+echo -e -n "\tOpening UDP ports for AA..."
+for port in $AA_UDP
+do
+ echo -n " " ${port}
+ $IPT -A INPUT -i $OUTIF -p udp --dport $port -j ACCEPT
+done
+echo
+
+# prevent hammering, allow at most 3 connections within a 60-second period
+if [ 1 == 1 ] ; then
+$IPT -A INPUT -p tcp --dport 22 -m state --state NEW -m recent --set --name SSH
+$IPT -A INPUT -p tcp --dport 22 -m state --state NEW -j SSH_WHITELIST
+$IPT -A INPUT -p tcp --dport 22 -m state --state NEW -m recent --update --seconds 60 --hitcount 4 --rttl --name SSH -j LOG --log-prefix SSH_brute_force
+$IPT -A INPUT -p tcp --dport 22 -m state --state NEW -m recent --update --seconds 60 --hitcount 4 --rttl --name SSH 
+fi
+
+echo -e -n "\tAllowing passive ftp connections " $PASSIVEFTP
+$IPT -A INPUT  -i $OUTIF -p tcp --sport $PASSIVEFTP --dport $PASSIVEFTP -m state --state ESTABLISHED -j ACCEPT 
+$IPT -A OUTPUT -o $OUTIF -p tcp --sport $PASSIVEFTP --dport $PASSIVEFTP -m state --state ESTABLISHED,RELATED -j ACCEPT 
+echo
+
+if [ "$BAD_ICMP" != "" ] ; then
+  echo -e -n "\tDropping ICMP type ..."
+  for message in ${BAD_ICMP} ; do
+    ${IPT} -t filter -A INPUT -p icmp --icmp-type ${message} -j DROP
+    echo -n " " ${message}
+  done
+  echo
+fi
+echo -e "\tAllowing the rest of the ICMP messages in..."
+$IPT -A INPUT -p icmp --icmp-type ! echo-request -j ACCEPT
+
+## Make sure NEW tcp connections are SYN packets 
+$IPT -A INPUT -i $OUTIF -p tcp ! --syn -m state --state NEW -j DROP
+
+# avoid ping flood
+$IPT -A INPUT -i $OUTIF -p icmp --icmp-type echo-request -j syn-flood
+
+# avoid sync flood
+$IPT -A INPUT -i $OUTIF -p tcp --syn -j syn-flood 
+
+if [ 1 == 0 ] ; then
+# port forward: you can use -i OUTIF or -d $OUTIP
+# for NetMeeting, one needs: 389,522,1503,1720,1731
+# for games, you would need to consult their websites
+echo -e "\tPort forwarding 4462"
+$IPT -t nat -A PREROUTING -i $OUTIF  -p tcp --dport 4662 -j DNAT --to 192.168.2.2
+$IPT -A FORWARD -p tcp -i $OUTIF --dport 4662 -j ACCEPT
+fi
+
+# if using masquerading,  when you cannot determine your next OUTIP
+$IPT -t nat -A POSTROUTING -o $OUTIF -s $DIALINNET -j MASQUERADE
+
+# if using static IP, use source nat
+# that will make the traffic from private subnet to appear as
+# traffic from the gateway
+$IPT -t nat -A POSTROUTING -o $OUTIF -s $INTNET -j SNAT --to $OUTIP
+# $IPT -t nat -A POSTROUTING -o $OUTIF -s $DIALINNET -j SNAT --to $OUTIP
+
+# a few mangle rules to set the TOS of certain packets for efficiency
+# note that ssh sets its own TOS value, so is not required below
+$IPT -t mangle -A PREROUTING -p tcp --sport 443 -j TOS --set-tos 16
+$IPT -t mangle -A PREROUTING -p tcp --sport 21 -j TOS --set-tos 16
+$IPT -t mangle -A PREROUTING -p tcp --dport 443 -j TOS --set-tos 16
+$IPT -t mangle -A PREROUTING -p tcp --dport 21 -j TOS --set-tos 16
+$IPT -t mangle -A PREROUTING -p tcp --sport ftp-data -j TOS --set-tos 8
+$IPT -t mangle -A PREROUTING -p tcp --dport ftp-data -j TOS --set-tos 8
+$IPT -t mangle -A PREROUTING -p tcp --dport 25 -j TOS --set-tos 4
+$IPT -t mangle -A PREROUTING -p tcp --dport 110 -j TOS --set-tos 2
+
+# for the IGMP protocol of pppd when connecting to certain hosts
+${IPT} -A INPUT -p igmp -m limit --limit ${PING_FLOOD}  -j ACCEPT
+
+# Refuse spoofed packets pretending to be from your IP address.
+$IPT -A INPUT -i $OUTIF -s $OUTIP -j logdrop
+# Refuse packets claiming to be from a Class A private network.
+$IPT -A INPUT -i $OUTIF -s $CLASS_A -j logdrop
+# Refuse packets claiming to be from a Class B private network.
+$IPT -A INPUT -i $OUTIF -s $CLASS_B -j logdrop
+# Refuse packets claiming to be from a Class C private network.
+$IPT -A INPUT -i $OUTIF -s $CLASS_C -j logdrop
+# Refuse Class D multicast addresses. Multicast is illegal as a source address.
+$IPT -A INPUT -i $OUTIF -s $CLASS_D_MULTICAST -j logdrop
+# Refuse Class E reserved IP addresses.
+$IPT -A INPUT -i $OUTIF -s $CLASS_E_RESERVED_NET -j logdrop
+
+#log any intruders before dropping them
+$IPT -A INPUT -i $OUTIF -j logdrop
+
+## echo -e "\tRedirecting local packets to $OUTIP to loopback..."
+# $IPT -t nat -A OUTPUT -d $OUTIP -j DNAT --to 127.0.0.1
+
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+echo 
+echo -e "\tInternal: $INTIF $INTNET" 
+echo -e "\tDial-In: $DIALINIF $DIALINNET" 
+echo -e "\tExternal: $OUTIF $OUTNET" 
+echo 
+logger -t firewall start
+;; 
+
+#####STOP FIREWALL#### 
+stop) 
+echo "Shutting down firewall:" 
+echo 0 > /proc/sys/net/ipv4/ip_forward
+flushrules
+myrules
+echo "minimum protection"
+$IPT -A INPUT -i $OUTIF -m state --state NEW,INVALID -j logdrop 
+echo -e "\033[71G done" 
+logger -t firewall stop
+;; 
+
+#
+# SPT=1900 DPT=1900 : NETBIOS or uPNP traffic
+#
+port)
+grep -v "ICMP" $logfile | grep -v "SPT=1900 DPT=1900" | grep -v " SRC=192.168." | grep "DPT=" | grep " SRC=$2" | egrep -Eo 'SRC=[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|DPT=[0-9]{1,5}' | sed 'N;s/\n/ /' | cut -f 2 -d \  | sort | uniq -c | sort
+;;
+
+icmp)
+grep "ICMP" $logfile | cut --complement  -f 1-8 -d \  | sed -e "s/.* SRC=/SRC=/" | cut -f 1 -d \  | sed -e "s/SRC=//"
+# | sort | uniq -c
+;;
+
+host)
+grep -v "ICMP" $logfile | grep -v "SPT=1900 DPT=1900" | grep -v " SRC=192.168." | grep " SRC=" | grep "DPT=$2" | egrep -Eo 'SRC=[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | cut -f 2 -d "=" | sort | uniq -c | sort
+;;
+
+ban)
+# banip logger $2 -t ban
+iptables -I INPUT -s $2 -j logdrop
+;;
+
+html)
+echo "<html>"
+echo "<head>"
+echo '<meta http-equiv="Cache-Control" content="no-cache" />'
+echo '<meta http-equiv="Pragma" content="no-cache" />'
+echo '<meta http-equiv="Expires" content="0" />'
+echo "</head>"
+echo "<body><p>"
+cat /etc/fedora-release | cut -f 1,2,3 -d \ 
+# lsb_release -d | cut -f 2 -d :
+echo "<br>"
+uname -a
+echo "<br>"
+uptime
+echo "<table border=1>"
+echo "<caption><h2>"
+date 
+echo "</h2></caption>"
+echo "<tr><td><p><h3>Hits by Destination Port (DPT)</h3>"
+echo "<td><tt><pre>"
+$0 port | tail -15 | tee /tmp/rc.iptables.txt
+echo "</pre></tt>"
+x=`tail -1 /tmp/rc.iptables.txt | cut -d '=' -f 2`
+echo "<tr><td><p><h3>Top 20 IPs that Hit Port $x </h3>"
+echo "<td><tt><pre>"
+$0 host $x | tail -20
+echo "</pre></tt>"
+echo "<tr><td><p><h3>Hits by IP Address</h3>"
+echo "<td><tt><pre>"
+$0 host | tail | tee /tmp/rc.iptables.txt
+echo "</pre></tt>"
+
+for ii in {1..3}
+do
+  x=`tail -$ii /tmp/rc.iptables.txt | head -1 | cut -b 9-25`
+  # yy=`whois -n $x | grep -i "country:" | uniq -i`
+  # y=`wget --quiet -O - http://www.abuseipdb.com/check/$x | sed -e 's/<[^>]*>//g' | awk 'f{print;f=0} /Country:/{f=1}' | sed  -e 's/^[ \t]*//'`
+  y=`curl -s ipinfo.io/$x`
+  echo "<tr><td><p><h3>Ports Hit by $x<br><pre>$y</pre></h3>"
+  echo "<td><tt><pre>"
+  $0 port $x
+  echo "</pre></tt>"
+done
+
+echo "</table>"
+echo "<ul>"
+echo "<li><a href='http://www.speedguide.net/ports.php'>Ports Database - Speed Guide.net</a>"
+echo "<li><a href='http://www.abuseipdb.com'>AbuseIPDB - Check and report abuse IP</a>"
+echo "<li><a href='http://ipinfo.io'>ipinfo.io: IP Address Details</a>"
+echo "<li><a href='http://www.iana.org/assignments/port-numbers'>IANA port number</a>"
+echo "<li><a href='http://www.bekkoame.ne.jp/~s_ita/port/port1-99.html'>Typical use of various ports</a>"
+echo "<li><a href='http://www.iss.net/security_center/advice/Exploits/Ports/default.htm'>more port number</a>"
+echo "<li><a href='http://www.chebucto.ns.ca/~rakerman/port-table.html'>more port numbers</a>"
+echo "</ul>"
+echo "</body></html>"
+rm /tmp/rc.iptables.txt
+;;
+
+*) 
+echo "" 
+echo " USAGE: $0 [command] " 
+echo "" 
+echo " COMMANDS:" 
+echo " start         - Enables Firewall and Masquerading (if installed)." 
+echo " stop          - Disables Firewall and Masquerading (if installed)." 
+echo ""
+echo " icmp          - show icmp hits by ip address" 
+echo " port [ipaddr] - show hits by port [for the ip address]" 
+echo " host [port]   - show hits by ip address [for the specified port]" 
+echo " ban  [ipaddr] - ban ip address" 
+echo " html          - display iptables log in html format" 
+echo "" 
+echo $PPPNET
+exit 1 
+;; 
+
+esac 
+eexit 0
+</textarea>
+</body></html>
