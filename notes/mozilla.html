@@ -1,1 +1,1217 @@
+<html>
+<head>
+<style type="text/css">
+table {
+  border-collapse: collapse;
+  border: 1px solid;
+}
 
+pre {
+   overflow-x: auto;
+   white-space: pre-wrap;
+   white-space: -moz-pre-wrap;
+   white-space: -pre-wrap;
+   white-space: -o-pre-wrap;
+   word-wrap: break-word;
+}
+</style>
+</head><body>
+<table border="2"><tbody>
+<tr><td valign="top"><b></b><br>
+<td>Source:
+<ul><li></ul>
+<tr><td valign="top"><b>Deleting bookmark icons?</b><br>
+<td>Source: https://www.reddit.com/r/firefox/comments/9826rv/deleting_bookmark_icons/
+<p>Just delete <code>favicons.sqlite</code> after closing Firefox.
+<p>OR
+<p>Open the developer console (F12), and type in:
+<pre>Array.from(document.querySelectorAll("a[icon]"), link => { link.removeAttribute("icon"); })</pre>
+<tr><td valign="top"><b>Remove Favicons In Firefox Bookmarks</b><br>
+<td>Source: https://www.ghacks.net/2009/05/11/how-to-remove-favicons-in-firefox-bookmarks/<br>
+Simply load about:config in the Firefox address bar and filter the list for the term browser.chrome. Change the following three parameters to the following values:
+<ul><li><code>browser.chrome.favicons</code> - False
+<li><code>browser.chrome.image_icons.max_size</code> - 0
+<li><code>browser.chrome.site_icons</code> - False
+</ul>
+
+Open bookmarks.html in Firefox and paste following codes into Firefox's address box:
+<pre>
+javascript:(function(){%20var%20ls=document.getElementsByTagName('*');%20for%20%20(var%20i=0;%20i&lt;ls.length;%20i++)%20{l=ls[i];%20l.removeAttribute('id')%20;%20l.removeAttribute('last_charset');%20l.removeAttribute('icon');%20%20l.removeAttribute('last_modified');%20l.removeAttribute('last_visit');%20%20l.removeAttribute('add_date');%20l.removeAttribute('personal_toolbar_folder')%20;}%20alert('Cleanup%20Complete%20-%20Save%20as%20Web%20Page,%20%20Complete')})();
+</pre>
+<tr><td valign="top"><b>Hide icons when displaying bookmarks in Firefox</b><br>
+<td>Source: https://gist.github.com/jacobian/6981301
+<pre>@namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
+
+#PlacesToolbarItems .bookmark-item .toolbarbutton-icon {
+  display:none !important
+}</pre>
+<tr><td valign="top"><b>Clearing Icons stored in Firefox's bookmarks.html</b><br>
+<td>Source: https://www.reddit.com/r/firefox/comments/9826rv/deleting_bookmark_icons/
+<p>Method 1:
+<ul>
+<li>Close Firefox
+<li>Rename favicons.sqlite to (say) favicons_ORG.sqlite
+<li>Restart Firefox & open the library (Ctrl+Shift+B)
+<li>Export bookmarks: Import and Backup -> Export Bookmarks to HTLM...
+<li>Close Firefox
+<li>Delete favicons.sqlite
+<li>Rename favicons_ORG.sqlite to favicons.sqlite
+<li>Restart Firefox
+</ul>
+<p>Method 2:
+<ul>
+<li>Export bookmarks to HTML
+<li>View the exported bookmark in Firefox (drag and drop it should work)
+<li>Open the developer console (F12), and type in: <code>Array.from(document.querySelectorAll("a[icon]"), link => { link.removeAttribute("icon"); })</code>
+<li>Press [Ctrl-S] to save the HTML file!
+</ul>
+<tr><td valign="top"><b>Styling Firefox's Bookmark Menu</b>
+<td><pre>
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* only needed once */
+
+#BMB_searchBookmarks, #searchBookmarks { display: none !important; }
+
+#BMB_unsortedBookmarks, #menu_unsortedBookmarks { display:none!important; }
+
+#BMB_viewBookmarksSidebar, #BMB_viewBookmarksToolbar,
+#BMB_bookmarksShowAllTop, #BMB_bookmarksShowAllTop + menuseparator,
+#BMB_recentBookmarks, #BMB_recentBookmarks + menuseparator {
+  display: none !important;
+}
+
+#menu_bookmarkThisPage,
+#subscribeToPageMenuitem,
+#subscribeToPageMenupopup,
+#menu_bookmarkAllTabs,
+#bookmarksShowAll,
+#organizeBookmarksSeparator {
+ display:none!important;
+}
+
+menuseparator {visibility:collapse !important; }
+menuitem[label="Open All in Tabs"] { display:none!important; }
+menuitem[label="Manage bookmarks"] { display:none!important; }
+
+menupopup > menuitem, menupopup > menu {
+  font-family:arial;
+  font-size:11px;
+  padding-block: 2px !important;
+  min-height: unset !important;
+}
+
+/*
+References:
+
+'Manage Bookmarks' option is showing up twice | Firefox Support Forum | Mozilla Support
+https://support.mozilla.org/en-US/questions/1437819
+
+Removing "Other Bookmarks" | Firefox Support Forum | Mozilla Support
+https://support.mozilla.org/bm/questions/1389957
+
+Hide\Remove Bookmarks Toolbar & Other Bookmarks | Firefox Support Forum https://support.mozilla.org/en-US/questions/1380473
+
+Remove "Search Bookmarks" entry from the Bookmarks menu - mozillaZine Forums
+https://forums.mozillazine.org/viewtopic.php?t=3110267
+
+How do I customize the bookmarks menu, such as remove subscribe to this page and and hide or remove the unsorted bookmarks items on the menu bar for book marks? | Firefox Support Forum | Mozilla Support
+https://support.mozilla.org/en-US/questions/877124
+
+How do I remove "Other Bookmarks" using userChrome.css? : r/FirefoxCSS
+https://www.reddit.com/r/FirefoxCSS/comments/d12zfd/how_do_i_remove_other_bookmarks_using/
+
+menuseparator[afterplacescontent] {display:none!important}
+
+#BMB_bookmarksShowAll, #bookmarksShowAll {display:none!important}
+#organizeBookmarksSeparator { display: none !important;}
+#BMB_bookmarksToolbar
+
+Bookmarks menu lines [SOLVED] - mozillaZine Forums
+http://forums.mozillazine.org/viewtopic.php?t=2797487
+
+.openintabs-menuitem, .bookmarks-actions-menuseparator {display: none !important;}
+
+Remove 'Open All Tabs' and separator in Firefox 3.5 - Page 2 - mozillaZine Forums
+http://forums.mozillazine.org/viewtopic.php?t=1308635&start=15
+
+menu[container="true"]>menupopup[placespopup="true"]>menuseparator:nth-last-child(2):not(:first-child) {visibility:collapse !important; }
+
+Bookmark Padding in New Firefox Versions 2 | Firefox Support Forum | Mozilla Support
+https://support.mozilla.org/en-US/questions/1369996
+
+-padding: reduce to 3px, 2px, 1px or 0px as needed
+-min-height: v92.0 - for padding below 4px
+
+#bookmarks-view
+menupopup:not(.in-menulist) > menuitem, 
+menupopup:not(.in-menulist) > menu {
+*/
+</pre>
+<tr><td valign="top"><b>Reset the Window size and Placement of Firefox</b><br>
+<td>Source: https://superuser.com/questions/1470970/how-do-i-reset-the-window-size-and-placement-of-firefox
+<ul>
+<li>Click the Hamburger Menu Button, click Help then More Troubleshooting Information.
+<li>Under the Application Basics section next to Profile Folder, click Open Folder.
+<li>Delete the <code>xulstore.json</code> file and restart Firefox.
+</ul>
+<p>Source: https://www.ghacks.net/2019/04/24/firefox-not-remembering-the-last-window-size-this-may-fix-it/
+<ul><li>Set <code>privacy.resistFingerprinting.letterboxing</code> to False
+</uL>
+<tr><td valign="top"><b>Disable Auto-refresh in Firefox</b><br>
+<td>Source: https://www.maketecheasier.com/disable-web-page-auto-refresh-for-various-browsers/
+<ul>
+<li>Just type <code>about:config</code> into the Firefox address bar, Accept the risk!
+<li>Type <code>accessibility.blockautorefresh</code>
+<li>Set its value to "True".
+</ul>
+<tr><td valign="top"><b><br>Disable use of the HSTS Preload List</b>
+<td>Source: https://support.mozilla.org/en-US/questions/1280667
+<ul>
+<li>In a new tab, type or paste <code>about:config</code>
+<li>Type or paste <code>network.stricttransportsecurity.preloadlist</code>
+<li>Switch the value from true to false
+<li>You can use <code>https://searchfox.org/mozilla-release/search</code> to find website disabled by HSTS.
+</ul>
+<p>Source: https://www.reddit.com/r/firefox/comments/o2plap/how_to_prevent_firefox_from_switching_to_https/
+<ul>
+<li>In your firefox profile rename or delete the file called <code>SiteSecurityServiceState.txt</code>, which holds HSTS cookies.
+</ul>
+<tr><td valign="top"><b>Disabling HTTPS First in private windows</b><br>
+<td>Source: https://support.mozilla.org/bm/questions/1371788
+<p>In private windows, Firefox 91+ generally applies "HTTPS-First Mode". Unfortunately, unlike the "HTTPS Only" feature, which you can manage in detail, "HTTPS-First" does NOT allow user exceptions.
+<p>URL Redirect Checker: https://wheregoes.com/
+<ul>
+<li>In a new tab, type or paste <code>about:config</code>
+<li>Type or paste <code>dom.security.https_first_pbm</code>, switch the value from true to false
+<li>Type or paste <code>dom.security.https_first</code>, switch the value from true to false
+<li>Type or paste <code>browser.fixup.fallback-to-https</code>, switch the value from true to false
+</ul>
+<tr><td valign="top"><b>Block images without add-ons</b><br>
+<td>Source: https://support.mozilla.org/en-US/questions/1226175 
+<ul>
+<li>Type <code>about:config</code> in the address bar and press Enter (accept the risk, if asked)
+<li>Type in the search bar: <code>permissions.default.image</code> and set its value to 2 (Default: 1)
+<li>Then close and restart Firefox. 
+</ul>
+<p>Also related:
+
+<p>How to Block Images on Websites in Firefox<br>
+https://www.makeuseof.com/block-website-images-firefox/
+<tr><td valign="top"><b>Disable DNS Caching in Firefox</b><br>
+<td>Source: https://smallbusiness.chron.com/bypass-dns-firefox-29896.html
+<ul>
+<li>Type <code>about:config</code> in Firefox's address bar and press the Enter
+<li>Type <code>network.dnscache</code> and click on the "OK" button.
+<li>Set all listed entries to "0" and click on "OK."
+<li>Restart Firefox.
+</ul>
+<tr><td valign="top"><b>Disable Lockwise</b>
+<td>Source: https://www.askvg.com/firefox-tip-remove-lockwise-and-monitor-sections-from-aboutprotections-page
+<ol>
+<li>Open Mozilla Firefox and type "<code>about:config</code>" in the address bar and press Enter. It'll show you a warning message, click on "I accept the risk!" button. It'll open Firefox's hidden secret advanced configuration page i.e. about:config page.
+<li>Now type "<code>contentblocking.report</code>" in Search filter box and look for following preferences in the window:
+<br>
+<br><code>browser.contentblocking.report.lockwise.enabled</code>
+<br><code>browser.contentblocking.report.monitor.enabled</code>
+<br>
+<br>Both the preferences values are set to true by default, which means both sections i.e. Firefox Lockwise and Firefox Monitor are enabled and displaying on Privacy Protections (about:protections) page.</br>
+<li>To remove both sections, double-click on both preferences browser.contentblocking.report.lockwise.enabled and browser.contentblocking.report.monitor.enabled one by one and set their values to <b>false</b>. Alternatively, you can right-click on the preference and select Toggle option.
+<li>That's it. Now open Privacy Protections (<code>about:protections</code>) page again and Firefox will no longer show Lockwise and Monitor sections on the page.
+</ol>
+<p>Source: https://www.reddit.com/r/firefox/comments/eng1gf/how_do_i_remove_lockwise_in_firefox_and_go_back/
+<p>Lockwise can't be removed, as it is a replacement of the old password manager in Firefox. You don't have to save your passwords in it however.
+<p>If you want to view and maybe migrate your passwords, view logins.json file at C:\Users\name\AppData\Roaming\Mozilla\Firefox\Profiles\ in Windows.
+<p>Type about:profiles and look for <code>chrome://passwordmgr/content/passwordManager.xul</code>.
+<p><br/>
+<tr><td valign="top"><b>Enable userChrome.css and userContent.css after Firefox 69</b>
+<td>Source: https://www.ghacks.net/2019/05/24/firefox-69-userchrome-css-and-usercontent-css-disabled-by-default/
+<ul>
+<li>Mozilla plans to land a change in Firefox 69 that disables the loading of userChrome.css and userContent.css by default to improve performance. The files userChrome.css and userContent.css are used to modify content of webpages or the browser itself using CSS instructions.
+<li>The preference in question is <code>toolkit.legacyUserProfileCustomizations.stylesheets</code>. Here is how you change its value:
+<ul><li>Load <code>about:config</code> in the Firefox address bar.
+<li>Confirm that you will be careful.
+<li>Search for <code>toolkit.legacyUserProfileCustomizations.stylesheets</code> using the search at the top.
+<li>Toggle the preference. <code>True</code> means Firefox supports the CSS files, <code>False</code> that it ignores them.
+</ul>
+<p>From Amit's Thoughts: Looking through the Firefox source code for <a href="https://searchfox.org/mozilla-central/source/browser/base/content/browser.xhtml#1702">browser.xhtml</a> and also for <a href="https://searchfox.org/mozilla-central/source/browser/base/content/tabbrowser-tab.js">tabbrowser-tab.js</a> gives me all the xhtml elements of Firefox. There is also the <a href="https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox">Brwoser Toolbox</a>.
+<pre>devtools.chrome.enabled = true
+devtools.debugger.remote-enabled = true</pre>
+<tr><td valign="top"><b>Restoring bookmarks.html after Firefox 3</b>
+<td><p>Source: http://kb.mozillazine.org/Browser.bookmarks.autoExportHTML
+	<p>Firefox 3 (and later) and SeaMonkey 2.1 (and later) store their bookmarks bookmarks in <code>places.sqlite</code> and use JSON as the format for backups stored in the bookmarkbackups folder so, by default, bookmarks are no longer saved in HTML format. This preference allows bookmarks to be exported at shutdown to the Firefox or SeaMonkey profile folder as bookmarks.html.
+<p>Source: https://support.mozilla.org/en-US/questions/929746
+<p>You can add the following two string keys via <code>about:config</code> instead of editing <code>prefs.js</code> directly.
+<pre># change location of bookmark file:
+user_pref("browser.bookmarks.file", "drive:\\path\\bookmarks.html");
+
+# For Firefox 3.0 and after...
+user_pref("browser.bookmarks.autoExportHTML", True);</pre>
+<tr><td valign="top"><b>Disable Autoplay after Firefox 78</B><br>
+<td>Source: https://support.mozilla.org/en-US/questions/1278114 
+<ul>
+<li>In Firefox 78 <code>media.autoplay.enabled.user-gestures-needed=true</code> has been replaced by <code>media.autoplay.blocking_policy=1</code>.
+<li>If this isn't working then try <code>media.blocking_policy=2</code>
+<li>With blocking policy in effect, add-on Disable HTML 5 Autoplay is no longer needed. 
+</ul>
+<tr><td valign="top"><b>Reduce spacing between items in drop-down/context/popup menu, reduce tab bar height, make tab corners round  </b><br>
+<td>Source: https://www.userchrome.org/firefox-89-styling-proton-ui.html
+<pre>
+/*** Tighten up drop-down/context/popup menu spacing (8 Sep 2021) ***/
+menupopup:not(.in-menulist) > menuitem, 
+menupopup:not(.in-menulist) > menu {
+	padding-block: 3px !important; /* reduce to 3px, 2px, 1px or 0px as needed */ 
+	min-height: unset !important; /* v92.0 - for padding below 4px */
+}
+:root {
+	--arrowpanel-menuitem-padding: 4px 8px !important;
+}
+
+/* Reduce the height of the tab bar  */
+#TabsToolbar, #tabbrowser-tabs {
+	--tab-min-height: 25px !important;
+}
+
+/* Adjust tab corner shape, optionally remove space below tabs */
+#tabbrowser-tabs {
+   --user-tab-rounding: 6px;
+}
+
+.tab-background {
+   border-radius: var(--user-tab-rounding) var(--user-tab-rounding) 0px 0px !important;
+   margin-block: 1px 0 !important;
+}
+</pre>
+<p>
+<u>Enabling "Compact" Toolbar Density</u>
+<br>Source: https://www.userchrome.org/firefox-89-styling-proton-ui.html
+<ul>Do you miss having "compact" toolbars? The developers have reduced support for Compact mode so if you would like to select it from the Density popup on the Customize screen, you need to change a preference so it appears there:<br/><br/>
+	<li>In a new tab, type or paste <code>about:config</code> in the address bar and press Enter/Return. Click the button accepting the risk.
+<li>In the search box in the page, type or paste compact and pause while the list is filtered.
+<li>Double-click the <code>browser.compactmode.show</code> preference to switch the value from false to true. Now "Compact (not supported)" should appear on the Density popup in the Customize screen.
+</ul>
+<ul>Alternately, if you don't plan to use the Density selector frequently, you can modify the density preference directly:<br/></br>
+<li>In a new tab, type or paste <code>about:config</code> in the address bar and press Enter/Return. Click the button accepting the risk.
+<li>In the search box in the page, type or paste <code>browser.uidensity</code> and pause while the list is filtered.
+<li>Double-click the preference to display an editing field, change the value as desired, then press Enter or click the blue check mark button to save the change. These are the available values:
+<pre>0 => Normal density (default)
+1 => Compact density
+2 => Touch density
+</pre>
+</ul>
+<p>Also useful: Firefox-UI-Fix: https://github.com/black7375/Firefox-UI-Fix
+<p></br>
+<tr><td valign="top"><b>Resize Windows Control Menu buttons</b><br>
+<td>Source: https://www.reddit.com/r/FirefoxCSS/comments/9n81fx/resize_the_minmaxclose_button/
+<pre>
+.titlebar-button>.toolbarbutton-icon {
+	height: 8px !important;
+	min-height: 8px !important;
+	width: 8px !important;
+	min-width: 8px !important;
+}
+
+.titlebar-button {
+	padding-left: 5px !important;
+	padding-right: 5px !important;
+	padding-top: 6px !important;
+}
+
+.titlebar-buttonbox-container {
+	-moz-appearance: none !important;
+	margin-left: 0px !important;
+}
+<pre/>
+<tr><td valign="top"><b>Remove the minimize, maximize, and close buttons in the Window$ Control Menu Bar</b><br>
+<td>Source: https://support.mozilla.org/ha/questions/1323505
+<p>Then added the following to my userChrome.css file and restarted firefox.
+<pre>
+/* Remove the whole min-max-close box */
+.titlebar-buttonbox-container {
+	display:none
+} 
+</pre>
+<p>Source: https://support.mozilla.org/en-US/questions/1327999
+<pre>@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* only needed once */
+
+.titlebar-min {display:none!important;}
+.titlebar-max {display:none!important;}
+.titlebar-restore {display:none!important;}
+.titlebar-close {display:none!important;}
+</pre>
+<tr><td valign="top"><b>Move Window$ Control Menu buttons to the left</b><br>
+<td>Source: source: https://support.mozilla.org/en-US/questions/1222872
+<pre>#titlebar-max {
+  -moz-box-ordinal-group: 0;
+}
+#titlebar-content {
+    direction: rtl;
+}
+#TabsToolbar {
+    direction: rtl;
+}
+#tabbrowser-tabs {
+    direction: ltr;
+}
+</pre>
+<tr><td valign="top"><b>userChrome.css disable all close-tab buttons</b><br>
+<td>Source: https://support.mozilla.org/en-US/questions/1288218
+<pre>/*** Hide Tab Close buttons ***/
+.tabbrowser-tab .tab-close-button {
+	visibility: collapse !important;
+}
+</pre>
+<p>There used to be a preference called <code>browser.tabs.closeButton</code> back in the very early days. It was removed in Firefox 31 (http://kb.mozillazine.org/Browser.tabs.closeButtons).
+<p></br>
+<tr><td valign="top"><b>Style the active tab</b><br>
+	<td><p>Source: https://amitp.blogspot.com/2021/06/firefox-89-tab-appearance.html
+<pre>tab {
+  font-size: 17px !important;
+  font-family: Maven Pro !important;
+}
+
+.tabbrowser-tab[selected] .tab-label {
+   color: black !important;
+   font-weight: bold !important;
+}
+
+.tabbrowser-tab[selected] .tab-content {
+   background: #fcb731 ! important;
+}
+
+.tabbrowser-tab:not([selected]) .tab-content {
+   background: #585060;
+}</pre>
+<p>userChrome.css code for changing active tab colour<br/>
+Source: https://support.mozilla.org/en-US/questions/1282095
+<pre>.tab-background[selected="true"] {
+   background-color: #3B3B3B !important;
+   background-image: none !important;
+}
+</pre>
+<tr><td valign="top"><b>Set Title Bar Color to Windows Accent Colors</b><br>
+<td><u><h2>Firefox</h2></u>
+<p>Source: https://matthewminer.name/blog/how-to-get-windows-accent-colors-back-in-firefox-92
+<pre>#TabsToolbar,
+#navigator-toolbox {
+    background: -moz-accent-color !important;
+    color: white;
+}
+
+#TabsToolbar:-moz-window-inactive,
+#navigator-toolbox:-moz-window-inactive {
+    background: unset !important;
+    color: unset;
+}
+</pre>
+<p>Other reference: https://www.reddit.com/r/firefox/comments/b3o4qt/ff66_get_back_the_windows_accent_color_on_the/
+<pre>#toolbar-menubar, #TabsToolbar {
+    background-color: #0078d7 !important;
+}
+#toolbar-menubar, #TabsToolbar:-moz-window-inactive {
+    background-color: #333333 !important;
+}
+</pre>
+<p><u><h2>Thunderbird</h2></u>
+<p>Source: https://github.com/Zonnev/elementaryos-firefox-theme/issues/57
+<pre>/* Show active colors on main menu bar 
+https://matthewminer.name/blog/how-to-get-windows-accent-colors-back-in-firefox-92
+
+[feature request] elementary thunderbird theme #57 
+https://github.com/Zonnev/elementaryos-firefox-theme/issues/57
+*/
+
+#tabs-toolbar {
+  -moz-appearance: none !important;
+  background:  -moz-accent-color !important;
+  color: white;
+}
+
+#tabs-toolbar:-moz-window-inactive {
+  background: unset !important;
+  color: unset;
+}
+</pre>
+<tr><td valign="top"><b>Disable Telemetry in Thunderbird</b><br>
+		<td>Source:<br/>
+https://superuser.com/questions/1672309/how-do-i-disable-telemetry-in-thunderbird</br>
+https://support.mozilla.org/en-US/questions/1197144
+<p>Much simpler is go to preferences and type "data" into the search field, go to "Thunderbird Data Collection and Use", uncheck "Allow Daily to send technical and interaction data to Mozilla" and "Allow Thunderbird to send backlogged crash reports on your behalf".
+<p>The difficult way is to set the following in <code>about:config</code>:
+<ul>
+<li>Go to Edit | Preferences (or Tools | Options, or Tools | Preferences) on the main menu, or Preferences on the Hamburger menu.
+<li>Locate the <code>[Config Editor]</code> button and press it.
+<li>Set the following preferences to false:
+<pre>
+dom.security.unexpected_system_load_telemetry_enabled
+network.trr.confirmation_telemetry_enabled
+privacy.trackingprotection.origin_telemetry.enabled
+telemetry.origin_telemetry_test_mode.enabled
+toolkit.telemetry.archive.enabled
+toolkit.telemetry.bhrPing.enabled
+toolkit.telemetry.ecosystemtelemetry.enabled
+toolkit.telemetry.firstShutdownPing.enabled
+toolkit.telemetry.newProfilePing.enabled
+toolkit.telemetry.shutdownPingSender.enabled
+toolkit.telemetry.shutdownPingSender.enabledFirstSession
+toolkit.telemetry.updatePing.enabled
+toolkit.telemetry.unified
+toolkit.telemetry.archive.enabled</pre>
+
+<li>You can try, but probably fail, to set the following preference:<pre>
+toolkit.telemetry.enabled = false</pre>
+<li>Set:<pre>
+toolkit.telemetry.rejected = true
+toolkit.telemetry.prompted = 2</pre>
+<li>To be on the safe side, set
+<pre>
+toolkit.telemetry.server = http://no-such-frigging-server.kthxbye/</pre>
+</ul>
+<tr><td valign="top"><b>Disabling OCSP Stapling in Firefox</b><br>
+<td>Source: https://support.mozilla.org/en-US/questions/1259329
+<ul>
+<li>When accessing <a href="https://answers.microsoft.com">https://answer.microsoft.com</a>, there was an error MOZILLA_PKIX_ERROR_OCSP_RESPONSE_FOR_CERT_MISSING. To solve this issue, Go to <code>about:config</code>, search for <code>"ocsp_stapling</code>", and set it to <code>false</code>.
+<li>According to <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1489411" target="_blank">BugZIlla</a>, when stapled OCSP response containing CertID constructed with SHA256 was received, firefox rejected to connect with MOZILLA_PKIX_ERROR_OCSP_RESPONSE_FOR_CERT_MISSING error despite the fact that stapled OCSP response was valid and correct.
+<li>You can test your browser using Qualys SSL Labs: <a href="https://clienttest.ssllabs.com:8443/ssltest/viewMyClient.html" target="_blank">SSL/TLS Capabilities of Your Browser</a>
+<li><a href="https://blog.mozilla.org/security/2013/07/29/ocsp-stapling-in-firefox/" target="_blank">OCSP Stapling in Firefox - Mozilla Security Blog</a>
+<li><a href="https://certificate.revocationcheck.com" target="_blank">Check Certificate Revocation Lists the OCSP status of an (SSL) Certificate</a>
+<li>Even Micro$oft websites could sometimes have expired security certs, as for example, https://answers.microsoft.com/en-us!
+</ul>
+<tr><td valign="top"><b>DNSSEC, TLS 1.3 and Encrypted SNI</b><br>
+<td>Source: https://yevhen.ca/privacy-hardening-your-browser-with-dnssec-tls-1-3-and-encrypted-sni-for/
+
+<p>Go to the <code>about:config</code> page and set the following options:
+<code>
+<br>
+<br>network.security.esni.enabled = true
+<br>network.trr.mode = 2
+</code>
+
+<p>If you wish to change your trusted recursive resolver from Cloudflare to one of the other options, modify <code>network.trr.uri</code> to one of the following:
+
+<p>Google: https://dns.google.com/experimental
+<br>Quad9: https:/ad9.net/dns-query
+
+<p><u>How to Enable DNS-over-HTTPS and Encrypted SNI in Firefox</u>
+<p>Source: https://www.inmotionhosting.com/support/website/security/dns-over-https-encrypted-sni-in-firefox/
+
+<p>Starting in Firefox 73, users can easily use DNS-over-HTTPS (DoH) and Encrypted Server Name Indication (SNI) for better privacy without extra software. These newer DNS security features help protect user privacy during web activity.
+
+<p><u>Trusted Recursive Resolution</u>(<code>network.trr.mode</code>)
+
+<p>Enabling Trustersive Resolver (TRR) mode affects how Firefox en DNS resolvers to improve DNS-oTPS (DoH). This is off by default.
+<ul>
+<li><code>0</code>: TRR off, only native DNS resolving (default)
+<li><code>2</code>: Try TRR first, and use resolver as a fallback (recommended)
+<li><code>3</code>: Only use TRR, requires bootstrapAddress pref to be set in version 73 and lower; version 74 bootstraps browser using native resolver, unless the DoH server domain can't be resolved - Bug 1593873 regards portal detection and telemetry (most strict)
+<li><code>5</code>: TRR off by choice, similar to 0 but marked as by choice
+</ul>
+<p>To test the setup:
+<code><ul>
+<li>https://www.cloudflare.com/ssl/encrypted-sni/
+<li>https://1.1.1.1/help
+<li>https://dnssec.vs.uni-due.de/
+</ul>
+</code>
+<p>To test both TLS and DNSSEC:
+<code><ul>
+<li>https://routersecurity.org/testdns.php
+<li>https://tenta.com/test/
+<li>https://ipx.ac/run
+<li>https://browserleaks.com/ip
+<li>http://www.whatsmydnsserver.com/
+</ul>
+</code>
+<p>Note that DNSSEC might interfere with DNS over TLS
+<code><ul>
+<li>openssl s_client -connect localhost:853
+<li>dig @127.0.0.1 google.com +tls
+</ul></code>
+<p><br>
+<tr><td valign="top"><b>Prevent Firefox from starting automatically</b>
+<td>Source: https://support.mozilla.org/en-US/kb/firefox-starts-automatically-when-i-restart-window
+<ul>
+<li>Type about:config in the address bar and press Enter. A warning page may Continue to continue to the about:config page.
+<li>Search for <code>toolkit.winRegisterApplicationRestart</code>
+<li> Click Toggle button next to it to set its value to false
+</ul>
+<tr><td valign="top"><b>Effectively Block Videos from Autoplay in Firefox 66</b>
+<td><b>From:</b> Nobody &lt;jock@soccer.com&gt;<br>
+<b>Subject:</b> Re: How do you EFFECTIVELY block videos in Firefox 66?<br>
+<b>Date:</b> Thu, 04 Apr 2019 10:30:47 -0700<br>
+<b>Newsgroups:</b> mozilla.support.firefox<br>
+<b>Message-ID:</b> <code>&lt;mailman.249.1554399050.6292.support-firefox@lists.mozilla.org&gt;</code>
+<p>As you, I'm royally whatevered-off with the increasingly difficult task of blocking all video autoplay.
+</p>
+<p>After the earlier thread "Firefox 66 damaged...", I've used a combination of suggestions:
+</p>
+<ol>
+<li>Installed the Disable HTML5 Autoplay extension
+</li>
+<li>Modified <code>media.allow.autoplay-muted</code> to false
+</li>
+<li>Modified <code>media.autoplay.block-webaudio</code> to true
+</li>
+<li>Modified <code>media.autoplay.default</code> to '1' (I had tried '2' as suggested but that didn't succeed for me)
+</li>
+<li>Modified <code>media.autoplay.enabled.user-gesture-needed</code> to false (for me that is especially effective against some news sites, though to my way of thinking, it really should be true...)
+</li>
+<li>Made sure that in <b>Option</b>-&gt;<b>Privacy &amp; Security</b> scrolled down to <b>Permissions</b> and checked <b>Block Websites from automatically play</b>
+</li>
+</ol>
+<p>So far so good... though until I tried '6.' some were still sneaking by!
+<tr><td valign="top"><b>User agent string without add-ons</b>
+<td>Source: <a href="https://www.howtogeek.com/113439/how-to-change-your-browsers-user-agent-without-installing-any-extensions/" target="_NEW">https://www.howtogeek.com/113439/how-to-change-your-browsers-user-agent-without-installing-any-extensions/</a>
+<ul>
+<li>To access the about:config page, type <code>about:config</code> into Firefoxs address and press Enter.
+<li>Type "useragent" into the filter box. We're looking for the <code>general.useragent.override</code> preference, but it probably won't exist on your system.
+<li>To create the preference, right-click the about:config page, point to New, and select String. Enter your desired user agent as the value of the preference. You'll have to look uyour desired user agent on the web and enter it exactly.
+<li>To revert Firefox to the default user agent, right-click the <code>general.useragent.override</code> preference and select Reset.
+</ul>
+<tr><td valign="top"><b>Disable auto-play for video content</b>?
+<td>Source: <a href="https://support.mozilla.org/en-US/questions/1150702" target="_NEW">https://support.mozilla.org/en-US/questions/1150702</a>
+<ul>
+<li>In a new tab, type or paste <code>about:config</code> in the address bar and press Enter/Return. Click the button <code>Promising to be careful</code> or <code>I accept the risk</code>.
+</li>
+<li>In the search box above the list, type or paste media*play and pause while the list is filtered
+</li>
+<li>To delay media from auto-starting in background tabs, I suggest: double-click the <code>media.block-play-until-visible</code> preference to switch the value from false to true.
+<li>To prevent media from auto-starting in any tabs: double-click the <code>media.autoplay.enabled</code> preference to switch the value from true to false
+</li>
+<p>Update:
+<li>After Firefox 60, <code>media.autoplay.enabled</code> had been changed to  <code>media.autoplay.default</code>, which is an integer. Default value is 0. You need to set it to 1 to disable video autoplay.</li></ul>
+<tr><td valign="top"><b>Video Autoplay</b>
+<td>Source: <a href="https://support.mozilla.org/en-US/questions/961940" target="_NEW">https://support.mozilla.org/en-US/questions/961940</a>
+<ul>
+<li>For HTML5 media you can try to set the <code>media.autoplay.enabled</code> pref to false on the about:config page.
+<li>Try to set the Boolean pref <code>media.windows-media-foundation.enabled</code> to false on the about:config page.
+<li>Type in the address bar: about:config Then search for: <code>plugins.click_to_play</code> Double click and it will be set to true) - doesn't stop videos from playing either. Sent feedback to FireFox about the issue. 
+</ul>
+<tr><td valign="top"><b>Scrolling, Page Loading & Javascript Memory Usage</b>
+<td>Source: <a href="https://www.reddit.com/r/linux/comments/39q6xt/some_useful_firefox_tips_to_fix_choppy_scrolling/" target="_NEW">https://www.reddit.com/r/linux/comments/39q6xt/some_useful_firefox_tips_to_fix_choppy_scrolling/</a>
+<ul>
+<li>Find <code>layout.frame_rate.precise</code> set it to enable. It increases animation speed. On my system it elliminated choppy scrolling almost completely.
+<li>Find <code>privacy.trackingprotection.enabled</code> and set to true. It's a built in Firefox tracking protection. It also speeds up page loading by 20-40%. This option replaces Disonnect extension and it may be removed after enabling this fix.
+<li>To do so, search for <code>image.mem.max_decoded_image_kb</code>. By default, this is set to a very high value Ã¢â‚¬â€œ 256000 or ~256 MB. Reduce this cache to something smaller, such as 51200 (50 MB). 
+<li>To reduce memory consumption by Javascript, locate the parameter <code>javascript.options.mem.max</code> and change its value from -1 (automatic) to 51200 (50 MB).
+<li>Also find <code>javascript.options.mem.high_water_mark</code>, and set it to 30 from the default 128. This parameter tells the garbage collector to start running when javascript is using 30 MB of memory. Garbage collection releases memory back to the system.
+<li>Alternatively, you can reduce the number of pages Firefox keeps in cache. To do this, open <b>about:config</b> and set the desired value in <code>browser.sessionhistory.max_entries</code>. A value of 10 should do.
+</ul>
+<tr><td valign="top"><b>Heavy SSD Writes and Firefox Session Recovery</b>
+<td><a href="https://www.servethehome.com/firefox-is-eating-your-ssd-here-is-how-to-fix-it/">https://www.servethehome.com/firefox-is-eating-your-ssd-here-is-how-to-fix-it/</a><br>
+<p>After some digging, I found out that this behavior is controlled by a
+ parameter that you can access through typing Ã¢â‚¬Å“about:configÃ¢â‚¬Â in the 
+address bar. This parameter is called <code>browser.sessionstore.interval</code>.</p>
+<p>It is set to 15 seconds by default. In my case, I reset it to a more sane (at least for me) 30 minutes. Since then, IÃ¢â‚¬â„¢m only seeing about 2GB written to disk when my workstation is left idle, which still feels like a lot but is 5 times less than before.</p>
+<p>Source: https://support.mozilla.org/en-US/questions/926708
+<p><code>browser.sessionstore.interval</code> as the article said: allowing the user to continue browsing from where they left off if browser restarts. This preference controls how often information about the current session is saved to the profile.  Default, in ff 12,  is 15000 or 15 seconds, so 365 days 31536000000 secs i think it is too long. I don't known the limit you want but try 120000 (2 minutes) or 300000(5 minutes).
+<p>Source: https://how-to.fandom.com/wiki/How_to_disable_Firefox%27s_session_restore_crash_recovery_feature
+<ul>Disabling crash recovery feature
+<li>Open <code>about:config</code> in the Firefox location bar
+<li>Type <code>browser.sessionstore.resume_from_crash</code> in the filter box, or search for it manually iny
+<li>Double click <code>browser.sessionstore.resume_from_crash</code> to change its boolean value from True to False.
+<li>Close and restart Firefox, and it should not warn you any more (but it does)
+</ul>
+<tr><td valign="top"><b>AdBlock Plus</b>
+<td><ul><li>I delete the "subscription lists", disallow <code>sponsored or discrete advertizing</code> or whatever they call it, set their home page to localhost in <code>about:config</code> AND add <code>127.0.0.1 notification.adblockplus.org</code> to my hosts file, because it phones home, regardless of settings.
+<li>Nothing if you have the <code>[ ] Allow some non-intrusive advertising</code> option unchecked.
+</ul>
+<tr><td valign="top"><b>Useful add-ons</b>
+<td><p><u><h3>Firefox</h3></u>
+<ul>
+<li>Copy PlainText
+<li>Copy Selected Tabs To Clipboard
+<li>Dark Background and Light Text (color problem starting with Firefox 102)
+<li>Disable Javacript
+<li>ImageBlock
+<li>OneTab
+<li>QR Code Reader
+<li>Offline QR Code Generator
+<li>TOPT (for GitHub 2FA)
+<li>Stop Auto Reload
+<li>uBlock Origin (replaces AdBlock Plus, Adblock Ultimate)
+</ul>
+<p><u><h3>Thunderbird</h3></u>
+<ul>
+<li>Charset Menu
+<li>Compacat Headers (replaces CompactHeader)
+<li>ConfirmBeforeDelete
+<li>Disable Drag and Drop (replaces ConfirmFolderMove)
+<li>Header Tools Improved (replaces Header Tools Lite)
+<li>Join-NG (not supported by Firefox 69+)
+<li>Manually Sort Folders
+<li>Quick Folder Move
+<li>Right Encoding (not supported by Firefox 69+)
+</ul>
+<p>Other interesting Firefox add-onss:
+<ul>
+<li>AdMuncher
+<li>Authenticator
+<li>Better URL Bar
+<li>Dark Reader
+<li>Darker Background Lighter Text
+<li>Disable HTML5 Autoplay
+<li>Easy Image Blocker
+<li>Fast Image Blocker
+<li>Flash Control
+<li>FoxyTab
+<li>HTML Content Blocker
+<li>Image Load Control
+<li>Mouseless Browsing
+<li>Night Mode Pro
+<li>Owl
+<li>PaxMod (legacy add-on that enabled multi-row tab bar)
+<li>Remove Anything
+<li>Theme Font & Size Changer
+<li>TitleUrlCopy
+<li>Tree Style Tab
+</ul>
+<tr><td valign="top"><b>Setting DPI</b>
+<td>Source: https://wiki.archlinux.org/index.php/firefox_tweaks#Configure_the_DPI_value
+<br>Source: https://support.mozilla.org/en-US/questions/963502
+<ul><li>... For example, if your system's DPI is 144, then the value to add is 144/96 = 1.5. Changing <code>layout.css.devPixelsPerPx</code> (via <code>about:config</code>) from -1.0 (default, step of 0.05) to 1.5 makes web page contents use a DPI of 144, which looks much better.
+<td>
+<tr><td valign="top"><b>Pipelining</b>
+<td>Source: http://egonitron.com/2007/05/25/the-truth-about-the-firefox-pipelining-trick/
+<ul>
+<li><code>network.http.version</code> = 1.1
+<li><code>network.http.pipelining</code> = true
+<li><code>network.http.proxy.pipelining</code> = true
+<li><code>network.http.pipelining.ssl</code> = true
+<li><code>network.http.pipelining.aggressive</code> = true
+<li><code>network.http.pipelining.maxrequests</code> = 8
+<li>You can go <code>about:support</code> to verify settings.
+</ul>
+<tr><td valign="top"><b>Firefox Built-in PDF.js</b>
+<td>Source: https://support.mozilla.org/en-US/questions/950988
+<ul>
+<li>You can set the <code>pdfjs.disabled</code> pref to true on the <code>about:config</code> page to disable the build-in PDF viewer and use the Adobe Reader instead. 
+<li>...if you want to switch back to the plugin you've used before to view pdfs just go to firefox options > applications & define the default action for the portable document format (pdf).
+</ul>
+<tr><td valign="top"><b>Firefox Cache Folder (RAMdisk?)</b>
+<td>Source: https://support.mozilla.org/en-US/questions/768867
+<ol>
+<li>Type <code>about:config</code> into the location bar and press enter
+<li>Accept the warning message that appears, you will be taken to a list of preferences
+<li>Right-click somewhere in the list and select "New > String"
+<li>For the name of the preference type <code>browser.cache.disk.parent_directory</code>
+<li>For its value type the path to where you want to store the cache
+<li>Next locate the preference <code>browser.cache.disk.enable</code>, it must be set to true, if it is not, double-click on it to change its value 
+</ol>
+<tr><td valign="top"><b>Firefox hardware acceleration</b>
+<td>
+<p>Source: http://support.readcube.com/knowledgebase/articles/402128-firefox-issue-poor-font-rendering-in-html5-reader
+<p>There is a known issue with the Mozilla Firefox web browser that prevents the ReadCube HTML5 Web Reader from loading on some computers. In particular, Windows and Linux systems are known to be affected.  If Firefox is not able to correctly recognize your graphics card for enabling hardware acceleration, a feature called DirectWrite is disabled.
+<ol>
+<li>In the address bar, type <code>about:config</code> and press Enter
+<li>Search for the preference name: <code>gfx.font_rendering.directwrite.enabled</code> and set the value to <code>true</code>
+<li>Search for preference name: <code>gfx.direct2d.disabled</code> and set the value to <code>true</code>
+<li>Restart Firefox
+<li>These two settings will disable anti-aliasing for downloadable fonts. So you might want to set your own replacement fonts.
+</ol>
+<p>Note: Enabling DirectWrite will cause the built-in PDF reader of Firefox to show blank pages.
+
+<ul>Related bugs:
+<li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1125461" target="_blank">Bugzilla Bug 1125461</a>
+<li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=923612" target="_blank">Bugzilla Bug 923612</a>
+</ul>
+
+<b>Update:</b> With the release of Firefox 43 and AMD Crimson driver (15.10, 15.12), this problem seemed to have been fixed finally!
+<tr><td valign="top"><b>Disable Shader Cache in Thunderbird</b><br>
+<td>Source: https://gitlab.torproject.org/tpo/applications/tor-browser/-/issues/40054
+<ul><li>Set <code>gfx.webrender.program-binary-disk</code> to false and don't forget about <code>gfx.webrender.precache-shaders</code>.
+</ul>
+<tr><td valign="top"><b>Memory caching</b>
+<td>Source: http://lifehacker.com/5687850/speed-up-firefox-by-moving-your-cache-to-ram-no-ram-disk-required<br>
+<ul>
+<li><code>browser.cache.disk.enable</code> = false
+<li><code>browser.cache.memory.enable</code> = true
+<li><code>browser.cache.memory.capacity</code> = -1
+<li>Go <code>about:cache</code> to verify settings.
+</ul>
+<tr><td valign="top"><b>userChrome.css for Thunderbird</b>
+<td><pre>
+/* Attachment pane at bottom of message window */
+#attachmentView {
+  -moz-appearance: none !important;
+  height: 40px !important;
+  overflow: auto !important; }
+
+/* hide go button */
+#go-button {
+  display: none !important; }
+
+#mail-menubar > menu {
+  font-size: 12pt !important
+}
+#compose-menubar > menu {
+  font-size: 12pt !important
+}
+statusbarpanel {
+  font-size: 12pt !important
+}
+menupopup > * {
+  font-size: 12pt !important
+}
+#urlbar {
+   font-family: monospace !important;
+   font-size: 13pt !important;
+}
+#throbber-box {
+  display: none !important;
+}
+#folderTree {
+  font-size:   12pt !important;
+}
+#threadTree {
+  font-size:   12pt   !important;
+}
+
+treechildren:-moz-tree-cell-text(read) {
+  font-size: 12pt !important;
+}
+
+treechildren:-moz-tree-cell-text(unread) {
+  font-size: 12pt !important;
+}
+
+#msgHeaderView {
+    max-height: 15em !important;
+    overflow: auto !important; }
+
+#header-box {
+    font-size: 12pt !important;
+}
+#subject-box {
+    font-size: 12pt !important;
+}
+</pre>
+<tr><td valign="top"><b>Disable quote bars in Thunderbird</b>
+<td><b><u>userContent.css</u></b>
+<pre>@namespace url(http://www.w3.org/1999/xhtml);
+
+.moz-text-flowed, .moz-text-plain, .moz-text-html {
+  font-size: 12pt !important;
+}
+
+body {
+	font-size: 12pt !important;
+}
+
+/* color of quoted text in message editor */
+span[_moz_quote=true] {
+   color: #00ef33 !important;
+}
+
+/*
+Disbable graphical quote bars to use ">" instead
+
+https://support.mozilla.org/en-US/questions/1144690
+
+blockquote[type=cite] {
+   padding-bottom: 0 !important;
+   padding-top: 0 !important;
+   padding-left: 0 !important;
+   border-left: none !important;
+   border-right: none !important;
+}
+*/
+blockquote[type=cite] {
+   padding: 0 !important;
+   border: 0 !important;
+}
+
+/*
+https://kb.adamsdesk.com/application/mozilla_thunderbird_change_quote_text_bar_color/
+
+Colorful quotes up to 5 levels
+*/
+blockquote[type=cite] {
+   color: orange !important;
+   border-left-color: orange !important;
+}
+blockquote[type=cite] blockquote {
+   color: aqua ! important;
+   border-left-color: aqua !important;
+}
+blockquote[type=cite] blockquote blockquote {
+   color: greenyellow !important;
+   border-left-color: greenyellow !important;
+}
+blockquote[type=cite] blockquote blockquote blockquote {
+   color: HotPink !important;
+   border-left-color: HotPink !important;
+
+blockquote[type=cite] blockquote blockquote blockquote blockquote {
+   color: yellow !important;
+   border-left-color: yellow !important;
+}
+</pre>
+<p><u>prefs.js</u></br>
+<p>Accessible from <code>about:config</code> as well.
+<p>Source: http://www.hmetzger.de/net6e.html#7
+<pre>
+#
+# for disabling quote bars
+#
+# use traditional display of quotes
+user_pref("mail.quoted_graphical", false);
+user_pref("mailnews.display.disable_format_flowed_support", true);
+# user_pref("mail.quoteasblock", false); </pre>
+<tr><td valign="top"><b>prefs.js for Thunderbird</b>
+<td><pre>
+user_pref("mail.server.server1.max_cached_connections", 5); 
+
+# show user agent:
+user_pref("mailnews.headers.showUserAgent", true);
+# pretend to be a netscape 4
+user_pref("general.useragent.override","Mozilla/4.0 (compatible; MSIE 6.0; Windows 98)")
+
+# use default system color:
+user_pref("browser.display.use_system_colors",true);
+
+# stop format=flowed when reading messsages
+user_pref("mailnews.display.disable_format_flowed_support", true);
+# stop format=flowed when sending messsages
+user_pref("mailnews.send_plaintext_flowed", false);
+
+# change the attribution line when quoting
+user_pref("mailnews.reply_header_type", 2);
+user_pref("mailnews.reply_header_authorwrote", "%s spoke thusly");
+user_pref("mailnews.reply_header_separator", " ");
+user_pref("mailnews.reply_header_colon", "<br>");
+
+# wrap long line
+user_pref("view_source.wrap_long_lines", true);
+
+# minimum size of fonts
+user_pref("font.minimum-size.x-western", 13);
+
+#disable download plugin prompt
+user_pref("plugin.display_plugin_downloader_dialog", false);
+</pre>
+<p>Dumping all startup options and values:
+<pre>
+netscp6.exe -help > c:\ temp.txt
+</pre>
+<tr><td valign="top"><b>Advanced Mail/News display tweaks</b>
+<td><p>This tip requires (basic) knowledge of CSS. All settings are done by
+manipulating userContent.css. The main document describing the commands
+can be found here. I will only give some examples now, to show the power
+of Mozilla... :-)
+<p>These makes the font in the mail/news window bigger in this example 12 points.
+<br>
+<br>
+<u><b>userContent.css</b></u>
+<pre>
+.moz-text-plain pre {
+   font-size: 12pt;
+}
+
+# Use another font for mail/news display:
+.moz-text-plain pre {
+   font-family: Arial ! important;
+}
+</pre>
+<tr><td valign="top"><b>Disable Data Reporting in Thunderbird</b><br>
+<td>Source: https://bugzilla.mozilla.org/show_bug.cgi?id=1195552#c4
+<ul><li>Set the following prefs.js or in Config Editor:
+<pre>user_pref("datareporting.healthreport.service.enabled", false);
+user_pref("datareporting.healthreport.uploadEnabled", false);
+user_pref("datareporting.policy.dataSubmissionEnabled", false);
+user_pref("toolkit.telemetry.unified", false);</pre>
+<li><code>datareporting.policy.dataSubmissionEnabled</code> is the kill-switch for uploads, so the actual reporting is off. We still maintain state locally though.
+</ul>
+<tr><td valign="top"><b>Disable Start Page in Netscape/Thunderbird</b>
+<td><pre>
+user_pref("mailnews.start_page.enabled", false);
+user_pref("mailnews.start_page.url", "about:blank");
+user_pref("browser.wfe.ignore_def_check", true);
+</pre>
+<tr><td valign="top"><b>Thunderbird on Linux</b>
+<td><pre>
+http://gentoo-wiki.com/TIP_Integrate_Thunderbird_and_Firefox
+user_pref("network.protocol-handler.app.ftp","/usr/bin/firefox");
+user_pref("network.protocol-handler.app.http","/usr/bin/firefox");
+user_pref("network.protocol-handler.app.https","/usr/bin/firefox");
+</pre>
+<tr><td valign="top"><b>My dark theme for Thunderbird before version 10<b>
+<td>
+<u><b>userChrome.css</b></u>
+<pre>
+@namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
+
+window > box {
+  color: white !important;
+  background-color: black !important;
+}
+
+/* area upper right */
+#threadTree {
+  color: white !important;
+  background-color: black !important;
+}
+/* add zebra tripping */
+#threadTree treechildren {
+   color: white !important;
+   background-color: black !important;
+}
+#threadTree treechildren::-moz-tree-row(odd) {
+   background-color: #003300 !important;
+}
+#threadTree treechildren::-moz-tree-row(odd, selected) {
+   background-color: white !important;
+   border: 1px solid red !important;
+}
+#threadTree treechildren::-moz-tree-row(even) {
+   background-color: black !important;
+}
+#threadTree treechildren::-moz-tree-row(even, selected) {
+   background-color: white !important;
+   border: 1px solid red !important;
+}
+
+/* area sidebar */
+#folderTree {
+  color: white !important;
+  background-color: black !important;
+}
+/* add zebra tripping */
+#folderTree treechildren {
+   color: white !important;
+   background-color: black !important;
+}
+#folderTree treechildren::-moz-tree-row(odd) {
+   background-color: #003300 !important;
+}
+#folderTree treechildren::-moz-tree-row(odd, selected) {
+   background-color: white !important;
+   border: 1px solid red !important;
+}
+#folderTree treechildren::-moz-tree-row(even) {
+   background-color: black !important;
+}
+#folderTree treechildren::-moz-tree-row(even, selected) {
+   background-color: white !important;
+   border: 1px solid red !important;
+}
+
+treecol, .treecol-image {
+   -moz-appearance: none !important;
+   color: yellow !important;
+   background-color: green !important;
+   font-weight: bold;
+   font-size: 110%;
+}
+
+/*  https://gist.github.com/ctrl-freak/1151087 */
+tooltip {
+  -moz-appearance: none !important;
+  color: red !important;
+  background-color: pink !important;
+  border-radius:20%;
+}
+
+/* source: http://forums.mozillazine.org/viewtopic.php?f=39&t=2436557 */
+#msgHeaderView .headerValue /* Message pane header "From"/"Subject"/"TO" label */
+{
+   color: black !important; /* From/Subject/To data text color */
+   font-weight:bold !important;
+}
+
+#msgHeaderView /* Message pane header "Date"/"Time" */
+{
+   color:black !important;
+   font-weight:bold !important;
+}
+
+#msgHeaderView .headerName /* Message header pane labels */
+{
+   color: dimgrey !important;
+}
+
+<u><b>userContent.css</b></u>:
+body {
+	color: white !important;
+	background-color: black !important;
+}
+
+/* color of quoted text in message editor */
+span[_moz_quote=true] {
+	color: #00ef33 !important;
+}
+/* signature */
+.moz-txt-sig, .moz-signature {
+	font-size: 75%;
+	font-style: italic;
+}
+
+@-moz-document url-prefix(mailbox:) {
+  /* all the other rules go here */
+}
+
+@-moz-document url("about:newtab") {
+ body { background-color: #EDCF54 !important;}
+}
+</pre>
+<tr><td valign="top"><b>Additional settings for dark theme of Thunderbird 9x</b><br>
+<td><p><u>userChrome.css</u>
+<pre>
+@namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
+
+/* #CCCCCC was originally white */
+
+window > box {
+  color: #CCCCCC !important;
+  background-color: black !important;
+}
+
+/* area upper right */
+#threadTree {
+  color: #CCCCCC !important;
+  background-color: black !important;
+}
+/* add zebra tripping */
+#threadTree treechildren {
+   color: #CCCCCC !important;
+   background-color: black !important;
+}
+#threadTree treechildren::-moz-tree-row(odd) {
+   background-color: #261d00 !important;
+}
+#threadTree treechildren::-moz-tree-row(odd, selected) {
+   border: 1px solid red !important;
+}
+#threadTree treechildren::-moz-tree-row(even) {
+   background-color: black !important;
+}
+#threadTree treechildren::-moz-tree-row(even, selected) {
+   border: 1px solid red !important;
+}
+
+/* area sidebar */
+#folderTree {
+  color: #CCCCCC !important;
+  background-color: black !important;
+}
+
+/* add zebra tripping */
+#folderTree treechildren {
+   color: #CCCCCC !important;
+   background-color: black !important;
+}
+#folderTree treechildren::-moz-tree-row(odd) {
+   background-color: #261d00 !important;
+}
+#folderTree treechildren::-moz-tree-row(odd, selected) {
+   background-color: #261d00 !important;
+   border: 1px solid red !important;
+}
+#folderTree treechildren::-moz-tree-row(even) {
+   background-color: black !important;
+}
+#folderTree treechildren::-moz-tree-row(even, selected) {
+   background-color: black !important;
+   border: 1px solid red !important;
+}
+
+treecol, .treecol-image {
+   -moz-appearance: none !important;
+   background-color: #512b00 !important;
+   color: orange !important;
+   font-weight: bold;
+   font-size: 110%;
+}
+/* https://www.reddit.com/r/Thunderbird/comments/80ob3x/userchromecss_theme/ */
+/* filter: invert(100%) hue-rotate(180deg) contrast(90%) saturate(200%) brightness(125%); */
+#quick-filter-bar
+{
+   visibility: visible;
+   background: #512b00 !important;
+   color: orange !important;
+}
+
+/*  https://gist.github.com/ctrl-freak/1151087 */
+tooltip {
+  -moz-appearance: none !important;
+  color: red !important;
+  background-color: pink !important;
+  border-radius:20%;
+}
+
+toolbox {
+  background-color: #512b00 !important;
+}
+
+/*
+https://gist.github.com/kael/aea855c8e6cb73e7c888fea66fc42ae8
+
+https://stackoverflow.com/questions/22323746/thunderbird-extension-add-button-in-message-reader-toolbar
+https://gist.github.com/igal/297077
+
+.msgHeaderView-button {
+  display: none;
+}
+
+https://stackoverflow.com/questions/57201164/modifying-mozilla-thunderbird-68-buttons-with-userchrome-css
+
+.hdrReplyButton {
+  display: none;
+}
+
+source:
+
+http://forums.mozillazine.org/viewtopic.php?f=39&t=2436557 
+http://forums.mozillazine.org/viewtopic.php?p=9175775
+
+*/
+.msgHeaderView-button {
+  background-color: #512b00 !important;
+}
+#msgHeaderView /* Message pane header "Date"/"Time",Buttons */
+{
+   color: orange !important;
+   font-weight:bold !important;
+   background-color: #512b00 !important;
+}
+#msgHeaderView .headerValue /* Message pane header "From"/"Subject"/"TO" label */
+{
+   color: white !important; /* From/Subject/To data text color */
+   font-weight:bold !important;
+}
+#msgHeaderView .headerName /* Message header pane labels */
+{
+   color: orange !important;
+}
+
+/* Show active colors on main menu bar
+
+https://matthewminer.name/blog/how-to-get-windows-accent-colors-back-in-firefox-92
+
+[feature request] elementary thunderbird theme #57 
+https://github.com/Zonnev/elementaryos-firefox-theme/issues/57
+*/
+#tabs-toolbar {
+  -moz-appearance: none !important;
+  background:  -moz-accent-color !important;
+  color: white;
+}
+
+#tabs-toolbar:-moz-window-inactive {
+    background: unset !important;
+    color: unset;
+}
+
+
+/*
+https://makandracards.com/makandra/1096-hide-thunderbird-s-buttons-in-message-headers-area
+
+#header-view-toolbox {
+  display: none;
+}
+#expandedHeaderRows {
+  padding-top: 0 !important;
+}
+*/
+</pre>
+</tbody>
+</table>
+</body></html>
