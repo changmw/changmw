@@ -1,0 +1,169 @@
+CONVERTING FROM FOXPRO/DOS, FOXPRO/WINDOW$ TO VISUAL FOXPRO
+
+0. set cpdialog off
+
+   to avoid seeing the codepage selection screen during
+   re-indexing. the proper way is to run CPZERO.PRG on
+   those old DBFs.
+
+   After a free table has been marked with a codepage (eg. 437).
+   Is there a way to change to another codepage of the table ? Any idea?
+
+   You can user CPZERO.PRG  to do this.
+   The next time you open the table, FoxPro will ask for correct codepage.
+
+1. convert
+   "clear read"
+   to
+   "thisform.release"
+
+2. move the code in
+      thisformset.readwhen()
+   to
+      thisform.init()
+   remove the formset afterwards.
+   set thisform.windowstate to "modal".
+   avoid using the thisform.refresh() which may
+   slow down the form.
+
+3. cut the objects out of the pageframe.page1
+   delete page1.
+   delete the pageframe.
+   paste it back to the form.
+
+4. reset all color-related properties to defaults
+   use 3d styles
+
+5. convert "=&w_title" to "=w_title" for window names
+
+6. select "alias" as listbox.Rowsourcetype
+   convert "&m_fields" into "eval(m_fields)"
+   set Listbox.Columncount to 1
+
+7. Edit the command button group
+   select control button_cacel
+   set its button_cancel.Cancel=.t.
+   set button_cancel.Terminate read to .f.
+
+8. convert "show gets disable" into
+   thisform.setall("tabstop", .f., "baseclass")
+
+9. replace "show get ... disable" with
+   thisform.control.tabstop=.f.
+
+10. when you use "browse ... windows ... ",
+    you must use
+    "browse ... in windows ...
+
+11. replace
+        "show get m.xx"
+    with
+        thisform.Controlxx.refresh()
+
+    sometimes, you may also need:
+
+        thisform.txtxx.requery()
+
+    if it's not within a form, use
+
+        _screen.activeform.control.refresh()
+
+12. replace
+    "_curobj=objnum(m.xx)"
+    with
+    button.click():
+    "thisform.txtxx.setfocus()"
+    or should it be gotfocus()?
+
+    130525 PRB: SetFocus Doesn't Work When Called in the Valid Event
+    http://support.microsoft.com/?id=130525
+
+13. delete the numeric digits appended to the
+    object names for each control. do not make the
+    object-name the same as control-source name to
+    avoid confusion.
+
+14. convert {31/12/2000}-DATE to ctod("31/12/2000")-DATE
+    or it you mind,
+    SET STRICTDATE TO 0
+    to allow co-existence with Foxpro 2.6 programs
+
+
+15. to produce a setup.exe,
+
+    1. create a directory in c:\system gthat contains only *.exe and *.app
+    2. run setup wizard
+    2.1. built the distribution package from c:\system
+    2.2. Choose "netsetup"
+    2.3. in step 6, check field "PM" in the item list. %s is
+         the macro for program location during installation.
+
+    pkzip and distribute the gigantic 7M directory instead.
+
+    useful links:
+
+    INFO: Visual FoxPro 6.0 Required Run-Time Files
+    http://support.microsoft.com/support/kb/articles/Q190/8/69.asp
+
+16. to add icons to the compiled exe, you need to create a
+    multi-resolution icons (for win9x). Not many tools allow that.
+    you may try Michelangelo or IconForge. A good link is:
+
+    http://www.cursorarts.com
+
+    Note that win98 cached the icons of each shortcut. You may
+    need to delete %WINDIR%\SHELLICONCACHE to force-refresh
+    all icons of shortcuts.
+
+17. To highlight the current cell in a grid,
+    read Micro$oft KB# Q129280 (related KB# Q132549)
+
+    function grid1.init()
+    local nColumnCount, objref
+
+     nColumncount=this.columncount
+     * The color of the current control is changed to red
+     * for every column in the grid.
+     FOR I=1 to nColumnCount
+       * Objref  returns a reference to the current control
+       objref=EVAL('this.columns(i).'+this.column1.currentcontrol)
+       * Modifies the backcolor property of the control. Any property of
+       * the control can be manipulated this way.
+       objref.BackColor=RGB(128,255,128)
+       objref.SelectedBackcolor=RGB(128,255,128)
+       objref.SelectedForecolor=RGB(0,0,0)
+     ENDFOR
+    return
+
+    To highlight even-number of rows
+    grid.afterrowcolchange():
+    if mod(grid.activerow,2)=0
+      this.dynamicbackcolor=rgb(0,0,255)
+    else
+      this.dynamicbackcolor=rgb(255,0.0)
+    endif
+
+18. To trap the keys in a grid, set form.keypreview=.t.,
+    then add the following logic to form.keypress()
+
+        if nKeycode=9
+          if upper(thisform.activecontrol.name)="GRID"
+            keyboard "{ctrl+tab}"
+            nodefault   && to not to process the current keystroke
+          endif
+        endif
+
+    You can also use this method to trap the ESC key in forms
+    when using the button's Cancel property (which couldn't
+    achieve the same effect as in Foxpro for DOS)
+
+19. varread() could be replaced by upper(thisform.activecontrol.name)
+
+26. The old context-sensitve help trick:
+
+        on key label F1 do pick with program(), varread()
+
+    would have problem working in VFP. Opening a form on top of
+    another form will trigger the lostfocus() event of the textbox.
+    If you have valid() logic, that would be quite problematic
+
