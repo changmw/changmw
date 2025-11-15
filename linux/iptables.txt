@@ -1,7 +1,3 @@
-<html><head/>
-<body>
-<center><h2>IPtables Firewall Script</h2></center>
-<textarea rows="550" cols="100">
 #!/bin/bash
 # bibliography:
 #
@@ -534,5 +530,3 @@ exit 1
 
 esac 
 eexit 0
-</textarea>
-</body></html>
