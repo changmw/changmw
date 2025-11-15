@@ -1,0 +1,436 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META NAME="generator" CONTENT="HTML Tidy, see www.w3.org">
+<TITLE>Installing ProFTPd</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000FF" VLINK="#FF0000" ALINK="#FF0000">
+<FONT FACE="Tahoma, Book Antiqua, Times New Roman, Times">
+<!--SXS HEADER START-->
+</FONT>
+<CENTER>
+  <TABLE WIDTH="100%" CELLPADDING="0" CELLSPACING="0" BORDER="0" HEIGHT="50">
+    <TBODY> 
+    <TR> 
+      <TD ALIGN="left" VALIGN="bottom" STYLE="background-image :  url(images/hdr_line_sm.png);background-position : center top;background-repeat : repeat-x;background-color : white;"> 
+        <FONT FACE="Tahoma, Book Antiqua, Times New Roman, Times">
+        <!--DATE MOD START-->
+        <FONT SIZE="-2"> 
+        <SCRIPT TYPE="text/javascript" LANGUAGE="JavaScript">
+			document.write("Updated: ")
+			document.write(document.lastModified)
+		</SCRIPT>
+        </FONT></FONT> <FONT FACE="Tahoma, Book Antiqua, Times New Roman, Times">
+        <!--DATE MOD END-->
+        </FONT></TD>
+      <TD ALIGN="right" VALIGN="top" STYLE="background-image :  url(images/hdr_line_sm.png);background-position : center top;background-repeat : repeat-x;background-color : white;"><FONT FACE="Tahoma, Book Antiqua, Times New Roman, Times"><A HREF="http://linux-sxs.org" TARGET="_blank"><IMG SRC="images/hdr_logo_sm.png" WIDTH="164" HEIGHT="50" ALIGN="top" BORDER="0" ALT="Linux Step By Steps"></A></FONT></TD>
+    </TR>
+    </TBODY> 
+  </TABLE>
+</CENTER>
+<FONT FACE="Tahoma, Book Antiqua, Times New Roman, Times">
+<!--SXS HEADER END-->
+</FONT>
+<H1><FONT FACE="Tahoma, Book Antiqua, Times New Roman, Times">Installing ProFTPD</FONT></H1>
+
+<FONT FACE="Tahoma, Book Antiqua, Times New Roman, Times">
+<p>From: <A HREF="mailto:mwchang@mail.hongkong.com">M.W.Chang</A></p>
+<p>Date: November 15, 2003 (6th Revision)</p>
+</FONT>
+
+<P><FONT FACE="Tahoma, Book Antiqua, Times New Roman, Times">This document describes the compile/install and configuration of a very basic ProFTPD service.</FONT></P>
+<p><b>INSTALLATION</b>
+<P><FONT FACE="Tahoma, Book Antiqua, Times New Roman, Times">
+Grab the proftpd-1.2.9.tar.gz (tar-ball) from <a href="http://www.proftpd.org">Proftpd website</a>. I am using Caldera OpenLinux 3.1, so I configured the package with these switches, and use checkinstall-1.5.2 to turn the package into an regular RPM for installation. Note that I included some of the plug-in modules in /contrib directory of proftpd.
+</FONT>
+
+</P>
+<PRE>
+#!/bin/bash
+# 
+# decompress the archive in /usr/src
+#
+cd /usr/src
+tar xzvf /path/to/proftpd-1.2.9.tar.gz
+# 
+# configure it
+#
+cd proftpd-1.2.9
+./configure \
+--prefix=/usr \
+--sysconfdir=/etc \
+--localstatedir=/var/run
+--with-modules=mod_readme:mod_wrap:mod_ratio
+# 
+# later on, you may want to compile with these modules to deploy
+# more advanced features like mysql and openldap support
+# mod_sql:mod_sql_mysql:mod_ldap
+#
+# 
+make -j 3
+#
+# you may use checkinstall to install proftpd, which will
+# keep a record of all the files installed by `check install`
+# and build an rpm
+#
+# checkinstall -si make install
+#
+make install
+</pre>
+<FONT FACE="Tahoma, Book Antiqua, Times New Roman, Times">
+<p>NOTE: checkinstall-1.5.2 would require you to enter the path to Caldera's RPM repository in /usr/src/OpenLinux.
+<p>If everything goes well, you will find the following files installed:
+</font>
+
+<pre>
+root@server: html> rpm -qil proftpd
+Name        : proftpd                      Vendor: (none)
+Version     : 1.2.9                  Distribution: (none)
+Release     : 1                        Build Host: server.donkeyware.org
+Install Date: 2003-11-02T03:54:58Z     Build Date: 2003-11-02T03:54:45Z
+Size        : 968322                   Source RPM: proftpd-1.2.9-1.src.rpm
+Group       : Applications/System
+Copyright   : GPL
+Packager    : checkinstall-1.5.2
+Summary     : Package created with checkinstall 1.5.2
+Description :
+Package created with checkinstall 1.5.2
+/usr/bin/ftpcount
+/usr/bin/ftptop
+/usr/bin/ftpwho
+/usr/doc/proftpd-1.2.9/COPYING
+/usr/doc/proftpd-1.2.9/CREDITS
+/usr/doc/proftpd-1.2.9/ChangeLog
+/usr/doc/proftpd-1.2.9/INSTALL
+/usr/doc/proftpd-1.2.9/NEWS
+/usr/doc/proftpd-1.2.9/README
+/usr/doc/proftpd-1.2.9/README.AIX
+/usr/doc/proftpd-1.2.9/README.FreeBSD
+/usr/doc/proftpd-1.2.9/README.IPv6
+/usr/doc/proftpd-1.2.9/README.LDAP
+/usr/doc/proftpd-1.2.9/README.PAM
+/usr/doc/proftpd-1.2.9/README.Solaris2.5x
+/usr/doc/proftpd-1.2.9/README.Unixware
+/usr/doc/proftpd-1.2.9/README.capabilities
+/usr/doc/proftpd-1.2.9/README.cygwin
+/usr/doc/proftpd-1.2.9/README.mod_sql
+/usr/doc/proftpd-1.2.9/README.modules
+/usr/doc/proftpd-1.2.9/README.ports
+/usr/man/man1/ftpcount.1.gz
+/usr/man/man1/ftptop.1.gz
+/usr/man/man1/ftpwho.1.gz
+/usr/man/man5/xferlog.5.gz
+/usr/man/man8/ftpshut.8.gz
+/usr/man/man8/proftpd.8.gz
+/usr/sbin/ftpshut
+/usr/sbin/in.proftpd
+/usr/sbin/proftpd
+</pre>
+<p><b>DIRECTORY PERMISSIONS</b>
+<P><FONT FACE="Tahoma, Book Antiqua, Times New Roman, Times">
+<p>Next step, you need create the home directories of the default ftp. For my linux server, the home directory of my ftp account in /etc/passwd is /home/ftp. For this sample installation, there would be an additional directory /home/ftpdown for download only:
+<tt><pre>
+mkdir /home/ftp; chmod 753 /home/ftp; chown ftp:ftp /home/ftp
+mkdir /home/ftpdown;chmod 555 /home/ftpdown; chown nobody:nobody /home/ftpdown
+</PRE></tt>
+<p><b>DISABLING WU-FTPD</b>
+<P><FONT FACE="Tahoma, Book Antiqua, Times New Roman, Times">
+<p>Most linux distribution came with wu-ftpd pre-installed. You have to disable it in inetd (/etc/inetd.conf or /etc/inet.d/ftp) or xinetd (/etc/xinetd.conf), restart inet tcp wrapper daemon. Otherwise it will be holding the ftp port (default: 20-21) foreever. Certain packages like portsentry will also bind itself to any un-used priviledge ports. So beware.
+
+<p>You can always know what programs are holding the port 21 (or any port number) by this command:
+<tt><pre>
+netstat -anp | grep 21
+</pre></tt>
+<p>And then you can find out more about the program. The following shows how to find out more information about the progrma with a name of "ftp":
+<tt><pre>
+ps aux | grep ftp
+</pre></tt>
+<p><b>CONFIGURATION</b>
+<P><FONT FACE="Tahoma, Book Antiqua, Times New Roman, Times">
+<p>Before we actually invoke /usr/sbin/proftpd, we need to write a configuration file called /etc/proftpd.conf:
+<UL>
+<LI>Our proftpd will be a standalone daemon, which gives us speed and reliability.
+<LI>All users will login as anonymous users. Users who want to upload will login as upload, which in fact is an alias for the same anonymous account.
+<LI>The anonymous account is linked to a real user account ftp in /etc/passwd.
+<br>ftp:x:14:50:FTP User:/home/ftp:/bin/false
+<LI>For security sake, the ftp account will use a shell /bin/false to guarantee no login except for file transfer.
+<LI>The home directory for the ftp account is specified in /etc/passwd as well.
+<LI>To upload, users goes to ftp://111.222.333.444
+<LI>Unlimited number of users can always upload (which you may not want that)
+<LI>All uploads go to /home/ftp, to be owned by ftp:ftp, such that on one can download from it.
+<LI>To allow files to be downloaded, chown nobody:nobody the_file and move them to /home/ftpdown.
+<LI>To download, users goes to ftp://download@111.222.333.444
+<LI>Users can download from /home/ftpdown only.
+<LI>3 users can download at any time (MaxClients)
+<LI>Each download connection has bandwidth locked at 20000 kb/s (RateReadBPS).
+<LI>Each downloader can connect to your ftp server once only (MaxsClientPerHost).
+<LI>No linux users can login their home directory (well, I would study about it later)
+</ul>
+</P>
+
+<P>Time to convert all these decign decisions into the proftpd config file <b>/etc/proftpd.conf</b>. You may cut-and-paste the following into the file /etc/proftpd.conf:
+
+<xmp>
+# beginning of proftpd.conf
+ServerName		"Your FTP Server"
+# If you want to use inetd/xinetd, make sure you edit their
+# config files to use in.proftpd as daemon name, and change
+# ServerType to inetd.
+ServerType		standalone
+# if not switched on, won't answer calls from unknown destinations
+DefaultServer	on
+
+DefaultTransferMode	binary
+ServerIdent		off
+DefaultRoot		~
+
+# Port 21 is the standard FTP port.
+Port			21
+
+# If you do want normal users logging in at all, comment this
+<LIMIT LOGIN>
+  DenyAll
+</LIMIT>
+
+# Set the user and group that the server normally runs at.
+User			nobody
+Group			nogroup
+
+MaxInstances		10
+
+# Set the maximum number of seconds a data connection is allowed
+# to "stall" before being aborted.
+TimeoutStalled		300
+
+UseFtpUsers		off
+RootLogin		off
+PersistentPasswd	off
+
+# these speed up the login process but makes log less readable
+UseReverseDNS		off
+IdentLookup		off
+
+# you can have a separate file from the regular /etc/passwd
+#AuthUserFile		/etc/proftpd-passwd
+
+<Global>
+  Umask                         022
+  RequireValidShell             off
+  AllowForeignAddress           on
+  DirFakeGroup                  on      ~
+  DirFakeUser                   on      ~
+  DirFakeMode                   0440
+  HiddenStor			on
+</Global>
+# We want 'welcome.msg' displayed at login, and '.message' displayed
+# in each newly chdired directory.
+DisplayLogin			welcome.msg
+DisplayFirstChdir		.message
+AccessDenyMsg			"404 Access for %u has been denied.
+
+<Anonymous /home/ftpdown>
+  <Limit LOGIN>
+    AllowAll
+  </Limit>
+# you can use the alias as a password for your downloaders. :)
+  UserAlias                     download ftp
+#
+# But if you really use a password, you need to encrypt the password 
+# and paste the encrypted text below and uncomment the 2 lines below
+# AnonRequirePassword           on
+# UserPassword                  ftp crypted-text
+#
+  RequireValidShell             off
+  User                          ftp
+  Group                         ftp
+
+# you may not like the bandwidth control below
+# TransferRate        RETR|STOR|APPE|STOU KBrate:freebytes
+  TransferRate			RETR 20:0
+# older version use the following directive instead.
+#  RateReadBPS			20000
+
+  MaxClients                    3 "550 Too Many Users (Limit=%m)"
+  MaxClientsPerHost             1 "551 One connection per IP"
+
+# allow resume in downloading
+  HideNoAccess			on
+  AllowRetrieveRestart		on
+  <Limit WRITE>
+    DenyAll
+  </Limit>
+</Anonymous>
+
+<Anonymous /home/ftp>
+  <Limit LOGIN>
+    AllowAll
+  </Limit>
+  UserAlias                     anonymous ftp
+  User                          ftp
+  Group                         ftp
+  RequireValidShell             off
+# allow resume in uploading
+  AllowStoreRestart             on
+  AllowOverwrite                on
+  <Limit REST STOR MKD APPE>
+    AllowAll
+  </Limit>
+  <Limit RMD RNFR RNTO RETR DELE>
+    DenyAll
+  </Limit>
+# Reject all files with leading periods or dashes:
+  PathDenyFilter "(^|/)[-.]"
+</Anonymous>
+# end of proftpd.conf
+</xmp>
+
+<FONT FACE="Tahoma, Book Antiqua, Times New Roman, Times">
+<p>You will notice that there is a crypted-text above. It's the password for the ftp directory, encrypted by linux. You can use cli-crypt-1.0.tar.gz, which  is a package that can be downloaded from <a href="http://freshmeat.net">http://freshmeat.net</a> basically written for generating password with proftpd. Another simple way is to use a simple perl script (courtesy of http://www.}linuxjournal.com):
+</p> 
+
+<tt><pre>
+perl -e 'print("userPassword: ".crypt("secret","salt")."\n");'
+</pre></tt>
+
+<p>
+Just run the script, cut and paste the password into the blank <crypted-text> above will do.
+</p?
+
+<FONT FACE="Tahoma, Book Antiqua, Times New Roman, Times">
+<p><b>DAEMON CONTROL</b>
+<p>
+The following is a script to start/stop proftpd daemon:
+</p>
+</font>
+
+<pre>
+#!/bin/bash
+# reference:
+# http://www.castaglia.org/proftpd/doc/contrib/ProFTPD-mini-HOWTO-Stopping.html
+#
+
+# ProFTPD files
+FTPD_BIN=/usr/sbin/proftpd
+FTPD_CONF=/etc/proftpd.conf
+PIDFILE=/var/run/proftpd.pid
+
+# If PIDFILE exists, does it point to a proftpd process?
+
+if [ -f $PIDFILE ]; then
+   pid=`cat $PIDFILE`
+fi
+
+if [ ! -x $FTPD_BIN ]; then
+    echo "$0: $FTPD_BIN: cannot execute"
+    exit 1
+fi
+
+case $1 in
+
+    start)
+      if [ -n "$pid" ]; then
+        echo "$0: proftpd [PID $pid] already running"
+        exit
+      fi
+
+      if [ -r $FTPD_CONF ]; then
+        echo "Starting proftpd..."
+	rm -f /etc/shutmsg
+        $FTPD_BIN -c $FTPD_CONF
+
+      else
+        echo "$0: cannot start proftpd -- $FTPD_CONF missing"
+      fi
+      ;;
+
+    stop)
+      if [ -n "$pid" ]; then
+        echo "Stopping proftpd..."
+        kill -TERM $pid
+
+      else
+        echo "$0: proftpd not running"
+        exit 1
+      fi
+      ;;
+
+    restart)
+      if [ -n "$pid" ]; then
+        echo "Rehashing proftpd configuration"
+        kill -HUP $pid
+
+      else
+        echo "$0: proftpd not running"
+        exit 1
+      fi
+      ;;
+
+    *)
+      echo "usage: $0 {start|stop|restart}"
+      exit 1
+      ;;
+esac
+
+exit 0
+
+</pre>
+
+<p><b>LOG ANALYSIS</b>
+
+<P><FONT FACE="Tahoma, Book Antiqua, Times New Roman, Times">
+Proftpd generates a log file that's similar to the log file wu-ftpd, ie <b>/var/log/xferlog</b>. That means, you can use the <b>xferstats</b> script in the <b>/usr/src/proftpd-1.2.9/contrib</b> directory of the proftpd source (or the one from wu-ftpd which has bugs) to analyze the log. I put the xferstats script in /usr/sbin. There is a newer version of xferstats. Search for it via google.com using keyword "xferstats" or try <a href="http://xferstats.off.net">http://xferstats.off.net</a> . For a graphical presentation, you may use <a href="http://awstats.sourceforge.net/docs/awstats_faq.html#FTP">awstats</a>. In her website, he got an article teaching you how to modify the proftpd log format to suit her presentation.</p>
+
+<p>For your convinience, here's my /etc/logrotate.d/ftpd for proftpd's logs (in /var/log):
+</p>
+</font>
+<tt><pre>
+# beginning of /etc/logrotate.d/ftpd
+missingok
+
+/var/log/xferlog {
+  size=256k
+  nocopytruncate
+  postrotate
+    /usr/bin/killall -HUP syslogd
+  endscript
+}
+
+/var/log/ftp {
+  daily
+  rotate 7
+  postrotate
+    /usr/bin/killall -HUP syslogd
+  endscript
+}
+# end of /etc/logrotate.d/ftpd
+</pre></tt>
+
+<p><b>MONITOR</b>
+<p>
+Just like wu-ftpd, the command <b>ftpwho</b> will tell you what users are currently connecting to your proftpd. For more detail, you can use <b>ftpwho -v</b>. With verbose mode, the transfer rate of each connection would be shown.  And with the release of proftpd-1.2.7 and later, there is a new command called <b>ftptop</b>.
+
+<p>Alternatively, you may use SNMP tools like MRTG. One linux-sxs editor recommneded console tools pppstatus and ethstatus. I have found a tool called <a href="http://gael.roualland.free.fr/ifstat/">ifstat</a> which is really simple.
+
+<tt><pre>
+root@server: init.d> ifstat
+       eth0                eth1
+ KB/s in  KB/s out   KB/s in  KB/s out
+    0.67     16.96      0.00      0.00
+    1.25     33.58      0.00      0.00
+    0.67     16.81      0.00      0.00
+</pre></tt>
+
+<p>There is also <a href="http://www.ntop.org/download.html">ntop</a>, which is you can view its results via web browser (just like webmin). You can find them in http://freshmeat.net!
+</p>
+
+<p><b>Useful References</b>
+<ul>
+<li>log analysis using awstats: http://awstats.sourceforge.net/docs/awstats_faq.html#FTP
+<li>active vs passive ftp: http://slacksite.com/other/ftp.html
+<li>documentation in source code directory: /usr/src/proftpd-1.2.9/doc
+<li>documenetation for more advanced topics: http://www.castaglia.org/proftpd/
+<li>another mod for proftpd: ftp://ftp.opaopa.org/pub/proftpd/proftpd-site_index-0.1.tar.gz
+<li>chinese how-to: http://dns.bmes.tnc.edu.tw/notebook/proftp.htm
+</ul>
+</BODY>
+</HTML>
