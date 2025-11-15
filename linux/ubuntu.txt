@@ -1,0 +1,270 @@
+
+# useful apt commands:
+
+apt-cache depends mailx
+apt-cache search name
+
+remember to enable Universe in /etc/apt/sources.list
+
+#
+choose intel network card as primary network interface
+
+# to use dhcp on a particular interface
+vi /etc/network/interfaces
+* add lines:
+auto eth0
+iface eth0 inet dhcp
+* end add line
+/etc/init.d/networking restart
+
+# security
+sudo passwd (to set root password)
+vi /etc/group, remove users from group "admin"
+vi /etc/profile, set umask to 0027 (also clear the umask in users' .bashrc)
+chmod 640 /var/backups
+make sure that /etc/shadow is not world-readable
+
+# stop mailing of cron output
+vi /etc/crontab
+add line 'MAILTO=""' at the top
+
+# for compiling my own stuffs
+apt-get install build-essential
+apt-get install linux-headers-686
+apt-get install apt-file
+apt-get install rcconf
+apt-get install bin86
+
+# for deb source
+apt-get install devscripts
+apt-get install cdbs
+apt-get install fakeroot
+
+# package management
+echo proftpd hold | dpkg --set-selections
+echo proftpd hold | dpkg --clear-selections
+dpkg -L openssh-server 
+COLUMNS=132 dpkg -l | grep server
+dpkg -S /usr/bin/ssh
+dpkg -c /path/to/package.deb
+dpkg --purge package
+apt-get install
+apt-get remove
+apt-file search pattern
+
+# repository
+modify /etc/sources.list
+uncomment the 2 lines
+
+# setup services
+apt-get install ssh
+apt-get install dhcp3-server
+apt-get install proftpd
+apt-get install checkinstall
+
+# bittornado
+apt-get install python-dev
+
+# email
+apt-get remove postfix
+dpkg --purge postfix
+dpkg --purge postfix-tls
+apt-get install sendmail
+
+# install caching dns server
+apt-get install bind9
+comment out make_resolv_conf in
+  /etc/dhcp3/dhclient-script (dapper)
+  /usr/sbin/dhclient-script (edgy)
+  /sbin/dhclient-script (Feisty)
+so that it won't touch resolv.conf
+modify /etc/bind/named.conf to add ISP's dns server as forwarders.
+
+#
+apt-get samba
+turn on printer
+modify /etc/cups/cupsd.conf
+/etc/init.d/cupsys restart
+browse to server:631
+add printer epson_c41ux (Location: localhost)
+choose port, choose driver
+print test page
+modify /etc/cups/mime.types and /etc/cups/mime.convs (raw)
+modify /etc/samba/smb.conf, add printer section
+
+# web server
+apt-get install apache
+apt-get install php4
+apt-get install php4-dev
+apt-get install php4-cli
+apt-get install php4-gd
+apt-get install libapache-mod-php4
+apt-get install libxml2-dev
+
+
+# for qemu
+vi /etc/modprobe.d/aliases
+alias tun0 ethertap
+
+#locale
+add lines to /etc/locale.gen:
+zh_TW BIG5
+zh_CN GB2312
+zh_TW.UTF8 UTF8
+then run `locale-gen`
+dpkg-reconfigure locales
+
+# kernelm
+apt-get install libncurses5-dev
+modify /boot/grub/menu.lst
+find the line 
+# kopt=root=UUID=....
+change it to 
+# kopt=root=/dev/hda2
+modify /usr/sbin/update-grub
+comment out the two lines that called convert_kopt_to_uuid()
+update-grub
+(or grub-install /dev/hda)
+
+# mysql
+apt-get install mysql-server-4.1
+apt-get install php4-mysql
+mysqladmin -u root password <password>
+mysql> grant select on database.table to user@localhost;
+vi /usr/bin/mysqld_safe  (change umask from 007 to 002)
+
+# if you wanna relocate /var/lib/mysql to /home/mysql,
+after the move, create a soft-link /var/lib/mysql/ to point
+to the new location. Seems that Ubuntu didn't use the datadir
+option properly...
+
+
+# php 5 froms source codes for Ubuntu 6.10
+dpkg --purge all-php4-packages
+dpkg --purge all-php5-packages
+apt-get install bison
+apt-get install flex
+apt-get install apache2-dev
+apt-get install apache2-prefork-dev
+apt-get install libxml2-dev
+apt-get install libssl-dev
+apt-get install libjpeg62-dev
+apt-get install libpng12-dev
+apt-get install libxpm-dev
+apt-get install libfreetype6-dev
+apt-get install libc-client-dev
+apt-get install libmysqlclient15-dev
+now you could compile from source codes of php5
+
+
+# install from repositories 
+# Since 6.10, php-dbase is no longer available.
+apt-get install php5-mysql
+apt-get install php5-gd
+
+
+# reconfigure X
+sudo dpkg-reconfigure xserver-xorg
+
+# rc.local
+is /etc/init.d/bootmisc.sh
+
+# win32 AVI support
+deb ftp://ftp.nerim.net/debian-marillat/ sarge main
+cd /etc/apt
+gpg --keyserver wwwkeys.eu.pgp.net --recv-keys 1F41B907
+gpg --armor --export 1F41B907 | sudo apt-key add -
+
+apt-get update
+Install:
+w32codecs
+totem-xine (which will remove totem-gstreamer)
+
+# upgrade from Hoary to Breezy 
+follow the instrustions here:
+https://wiki.ubuntu.com/BreezyUpgrade?highlight=%28breezy%29%7C%28upgrade%29
+note that you would need to open the mini-terminal inside
+Synaptic to answer questions. Avoid overwriting the config files.
+
+### TARPIT
+run patch-o-matci against linux kernel and iptables userland source codes
+
+--- linux-2.6.14/net/ipv4/ip_output.c.orig
++++ linux-2.6.14/net/ipv4/ip_output.c
+@@ -1329,3 +1329,4 @@
+EXPORT_SYMBOL(ip_generic_getfrag);
+EXPORT_SYMBOL(ip_queue_xmit);
+EXPORT_SYMBOL(ip_send_check);
++EXPORT_SYMBOL(sysctl_ip_default_ttl);
+
+Drill down to networking
+-> network packet fitlering
+-> IP Netfilter
+-> packet filtering  (then you see tarpit)
+
+### boinc
+add repository to sources.list
+apt-get install boinc-client
+apt-get install boinc-manager
+
+# bind 9
+vi /etc/bind/named.conf.options
+add forwarder section
+vi /etc/default/bind9
+use "-u root" rather than "-u bind"
+vi /etc/dhcp3/dhclient-script
+adjust function make_resolv_conf()
+
+# modem Intel MD5628D-L-C
+https://wiki.ubuntu.com/DialupModemHowto?action=show&redirect=IntelFiveThreeSixEPModemHowto
+
+# set up soft links in /etc/rc*.d
+update-rc.d 
+
+#3 POPTP PPTPDsetup
+apt-get install pptpd
+apt-get install pptp-client
+make sure the MPPE patch is applied to kernel before 2.6.15
+
+# compiling samba 3.0.22 from source
+apt-get install libcupsys-dev
+
+# compiling rtorrent and libtorrent from source
+apt-get install pkg-config
+apt-get install libsigc++-2.0-dev
+apt-get install libcurl3-dev
+apt-get install libncurses5-dev
+
+# process accounting
+apt-get install acct
+/etc/init.d/acct start
+# accoutning file in /var/account/pacct
+
+# nvidia
+apt-get install nvidia-glx
+/etc/init.d/gdm restart
+
+
+# expect tutorial:
+# http://floppsie.comp.glam.ac.uk/Glamorgan/gaius/scripting/5.html
+./exp1.exp bob 123
+#!/usr/bin/expect
+spawn passwd [lindex $argv 0]
+set password [lindex $argv 1]
+expect "password:"
+send "$password\r"
+expect "password:"
+send "$password\r"
+expect eof
+
+#
+# GNU Screen examples
+#
+screen -d -m -S haha
+screen -S haha -X stuff ls^M
+screen -S haha -X stuff "ls\r"
+screen -S haha -X stuff $'\012'
+#
+# check out tmux as well
+# http://blog.hawkhost.com/2010/06/28/tmux-the-terminal-multiplexer/
+#
