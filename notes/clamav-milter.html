@@ -1,0 +1,273 @@
+<html>
+<body>
+<H1>Installing ClamAV As Milter for Sendmail (and Fetchmail)</H1>
+<p>From: <A HREF="mailto:mwchang@mail.hongkong.com">M.W.Chang</A></p>
+<p>Date: November 15, 2003 (1st Edition)</p>
+<br>
+<br>
+<p>This article aims to show the procedures needed to install a virun scanner, ClamAV, for sendmail via her milter interface.
+<p>1. Download ClamAV tarball clamav-0.65.tar.gz from <a href="http://www.clamav.net/">ClamAV's website</a>
+<p>2. Extract the source code:</p>
+<pre>
+# cd /usr/src
+# tar xzvf /path/to/clamav-0.65.tar.gz
+# cd /usr/src/clamav-0.65
+</pre>
+<p>3. Patch <b>clamav-milter/clam-milter.c</b> in the source directory if your sendmail is not accessibleas in /usr/lib/sendmail:
+<pre>
+--- clamav-milter.c.orig        Tue Nov 11 20:32:52 2003
++++ clamav-milter.c     Sat Nov 15 14:26:08 2003
+@@ -1243,7 +1243,7 @@
+ #endif
+
+                if(!qflag) {
+-                       sendmail = popen("/usr/lib/sendmail -t", "w");
++                       sendmail = popen("/usr/sbin/sendmail -t", "w");
+                        if(sendmail) {
+                                /*
+                                 * TODO: Make this e-mail message customisable
+</pre>
+ClamAV-0.65's Makefile for clamav-milter has a bug. Patch <b>clamav-milter/Makefile.in</b> with this patch:
+<pre>
+--- clamav-milter/Makefile.in.orig      Wed Nov 12 16:55:17 2003
++++ clamav-milter/Makefile.in   Wed Nov 12 16:55:36 2003
+@@ -122,7 +122,7 @@
+
+ @BUILD_CLAMD_TRUE@@HAVE_MILTER_TRUE@clamav_milter_LDADD = ../clamd/cfgfile.o ../clamd/others.o ../clamscan/getopt.o
+
+-@BUILD_CLAMD_TRUE@@HAVE_MILTER_TRUE@man_MANS = ../docs/clamav-milter.8
++@BUILD_CLAMD_TRUE@@HAVE_MILTER_TRUE@man_MANS = ../docs/man/clamav-milter.8
+
+ DEFS = @DEFS@
+</pre>
+<p>4. Add user and group <b>clamav</b>:
+<pre>
+# groupadd clamav
+# useradd -g clamav -d /dev/null clamav
+</pre>
+<p>5. Configure and compile the package
+<pre>
+# ./configure \
+        --prefix=/usr \
+        --sysconfdir=/etc \
+        --datadir=/var/clamav \
+        --enable-milter
+# make 
+# make install
+</pre>
+<P>After installing, you should find these files:
+<pre>
+Name        : clamav                       Vendor: (none)
+Version     : 0.65                   Distribution: (none)
+Release     : 1                        Build Host: server.donkeyware.org
+Install Date: 2003-11-15T04:13:09Z     Build Date: 2003-11-15T04:13:04Z
+Size        : 1865748                  Source RPM: clamav-0.65-1.src.rpm
+Group       : Applications/System
+Copyright   : GPL
+Packager    : checkinstall-1.5.2
+Summary     : Package created with checkinstall 1.5.2
+Description :
+Package created with checkinstall 1.5.2
+/usr/bin/clamdscan
+/usr/bin/clamscan
+/usr/bin/freshclam
+/usr/bin/sigtool
+/usr/doc/clamav-0.65/AUTHORS
+/usr/doc/clamav-0.65/BUGS
+/usr/doc/clamav-0.65/COPYING
+/usr/doc/clamav-0.65/ChangeLog
+/usr/doc/clamav-0.65/FAQ
+/usr/doc/clamav-0.65/INSTALL
+/usr/doc/clamav-0.65/NEWS
+/usr/doc/clamav-0.65/README
+/usr/doc/clamav-0.65/TODO
+/usr/include/clamav.h
+/usr/lib/libclamav.a
+/usr/lib/libclamav.la
+/usr/lib/libclamav.so
+/usr/lib/libclamav.so.1
+/usr/lib/libclamav.so.1.0.3
+/usr/man/man1/clamdscan.1.gz
+/usr/man/man1/clamscan.1.gz
+/usr/man/man1/freshclam.1.gz
+/usr/man/man1/sigtool.1.gz
+/usr/man/man5/clamav.conf.5.gz
+/usr/man/man8/clamav-milter.8.gz
+/usr/man/man8/clamd.8.gz
+/usr/sbin/clamav-milter
+/usr/sbin/clamd
+/usr/share/clamav/daily.cvd
+/usr/share/clamav/main.cvd
+/usr/share/clamav/mirrors.txt
+</pre>
+<p>6. Setup <b>/etc/clamav.conf</b>:
+<pre>
+# This option allows you to save the process identifier of the listening
+# daemon (main thread).
+PidFile /var/run/clamd.pid
+
+# Path to virus signature database
+# Default is the hardcoded directory (mostly /usr/local/share/clamav,
+DataDirectory /var/clamav
+ 
+# The daemon works in local or network mode. Currently the local mode is
+# recommended for security reasons.
+
+# Path to the local socket. The daemon doesn't change the mode of the
+# created file (portability reasons). You may want to create it in a directory
+# which is only accessible for a user running daemon.
+LocalSocket /var/clamav/clamd.sock
+
+# Maximal number of a threads running at the same time.
+# Default is 5, and it should be sufficient for a typical workstation.
+# You may need to increase threads number for a server machine.
+MaxThreads 200
+
+# Maximal depth the directories are scanned at.
+MaxDirectoryRecursion 15
+
+# Run as selected user (clamd must be started by root).
+# By default it doesn't drop priviledges.
+User clamav
+
+##
+## Archive support
+##
+
+# Comment this line to disable scanning of the archives.
+ScanArchive
+
+# Options below protect your system against Denial of Service attacks
+# with archive bombs.
+
+# Files in archives larger than this limit won't be scanned.
+# Value of 0 disables the limit.
+# WARNING: Due to the unrarlib implementation, whole files (one by one) in RAR
+#	   archives are decompressed to the memory. That's why never disable
+#	   this limit (but you may increase it of course!)
+ArchiveMaxFileSize 10M
+
+# Archives are scanned recursively - e.g. if Zip archive contains RAR file,
+# the RAR file will be decompressed, too (but only if recursion limit is set
+# at least to 1). With this option you may set the recursion level.
+# Value of 0 disables the limit.
+ArchiveMaxRecursion 5
+
+# Number of files to be scanned within archive.
+# Value of 0 disables the limit.
+ArchiveMaxFiles 1000
+
+# clamav-milter, need clamd.sock above
+ScanMail
+StreamSaveToDisk
+</pre>
+
+<p>7. Create the DataDirectory specified in /etc/clamav.conf:
+<pre>
+# mkdir /var/clamav
+# chown clamav:clamav /var/clamav
+</pre>
+
+<p>8. Download the <b>virus signature database</b> specified in /etc/clamav.conf. Firstly, install the database mirror servers list file <b>mirrors.txt</b> first:
+<pre>
+cp /usr/src/clamav-0.65/database/mirrors.txt /var/clamav
+</pre>
+<p>Then calling <b>freshclam</b> to download the virus database:
+<pre>
+/usr/bin/freshclam --quiet --stdout --datadir /var/clamav --log /var/clamav/clamav.log
+</pre>
+
+<p>You might want to put the freshclam in your crontab to run it periodically. For now, we will do it manually.
+
+<p>9. Test the intalled ClamAV by calling <b>clamscan</b>:
+<pre>
+# cd /usr/src/clamav-0.65/test
+# clamscan test1
+</pre>
+<p>You should see the following output:
+<pre>
+root@server: test> clamscan test1
+test1: ClamAV-Test-Signature FOUND
+
+----------- SCAN SUMMARY -----------
+Known viruses: 7846
+Scanned directories: 0
+Scanned files: 1
+Infected files: 1
+Data scanned: 0.00 Mb
+I/O buffer size: 131072 bytes
+Time: 0.598 sec (0 m 0 s)
+</pre>
+
+<p>10. Start the clamav milter. You need to fire up 2 daemons: <b>clamd</b> and <b>clam-milter</b>.
+<pre>
+# clamd
+# clamav-milter -blo /var/clamav/clmilter.sock
+</pre>
+<p>The 2 daemons will create 2 sockets in /var/clamav:
+<pre>
+root@server: html> ls -l /var/clamav/*sock
+srwxrwxrwx    1 clamav   clamav          0 Nov 11 15:13 /var/clamav/clamd.sock
+srwxr-xr-x    1 root     root            0 Nov 11 15:14 /var/clamav/clmilter.sock
+</pre>
+<p>11. Setup sendmail to call the milter. Add the following lines to the config.mc or <b>sendmail.mc</b> file:
+<pre>
+dnl ## milter clamav
+INPUT_MAIL_FILTER(`clmilter',`S=local:/var/clamav/clmilter.sock, F=, T=S:4m;
+R:4m')dnl
+define(`confINPUT_MAIL_FILTERS', `clmilter')
+</pre>
+<p>13.Rebuild your sendmmail.cf from this modified .mc with <b>m4</b>. Stop and Restart your sendmail daemon.
+
+<p>12.Test your ClamAV milter by sending out a message containing a ClamAV virus signature file:
+<pre>
+# cd /usr/src/clamav-0.65/test
+# cat test1 | mail root -s "Testing"
+</pre>
+<p>After the message was sent, take a look at the sendmail log in /var/log/mail.
+You should see how the milter examined and rejected the virus signature:
+<pre>
+Nov 15 09:37:34 server sendmail[5610]: hAF1bY52005610:
+from=<root@domain.server.com>, size=547, class=0, nrcpts=3,
+msgid=<200311150137.hAF1bYjl005609@domain.server.com>, proto=ESMTP,
+daemon=MTA, relay=localhost [127.0.0.1]
+Nov 15 09:37:34 server sendmail[5610]: hAF1bY52005610: Milter add: 
+header: X-Virus-Scanned: clamdscan / ClamAV version 0.65
+Nov 15 09:37:34 server sendmail[5609]: hAF1bYjl005609: 
+to=<0root@server.domain.com>,postmaster,<sender@server.domain.com>,
+ctladdr=root (0/0), delay=00:00:00, xdelay=00:00:00, 
+mailer=relay, pri=90265, relay=[127.0.0.1] [127.0.0.1], dsn=2.0.0, 
+stat=Sent (hAF1bY52005610 Message accepted for delivery)
+Nov 15 09:37:34 server sendmail[5606]: hAF1bY52005606: Milter: 
+data, reject=550 5.7.1 Virus detected by ClamAV - http://clamav.elektrapro.com
+Nov 15 09:37:34 server sendmail[5606]: hAF1bY52005606: 
+to=<root@server.domain.org>, delay=00:00:00, pri=30379, stat=Virus
+detected by ClamAV - http://clamav.elektrapro.com
+</pre>
+<p>The message was rejected with an error code 550 (reject=550). If you now check for new mail in sender's mailbox, it should contains a notification message with the subject "Virus Intercepted".
+<pre>
+A message you sent to
+	<0root@server.domain.com>
+contained a virus and has not been delivered.
+	stream: ClamAV-Test-Signature FOUND
+</pre>
+<p>If you are using fetchmail to pull messages from remote server, you would need to add an option to your fetchmail.rc config file:
+<pre>
+poll pop.isp.com
+protocol POP3
+username pop_user is linux_user
+password 'secret'
+options antispam 550;
+</pre>
+<p>This tells fetchmail to accept the error code 550 as a result and delete the message at the pop3 mailbox rahter than keeping it.
+
+<p>That's all. Enjoy your new virus filter for sendmail!
+
+<P><b>REFERENCES</b>
+<p><nl>
+<li>http://linux-sxs.org/administration/clamav.html
+<li>http://www.tanu.org/~sakane/doc/public/howto-clamav.html
+<li>http://hugues.lepesant.com/sendmail/
+</nl>
+</body>
+</html>
