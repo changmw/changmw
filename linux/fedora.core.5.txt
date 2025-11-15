@@ -1,0 +1,144 @@
+# To intsall driver during installation
+
+At boot prompt:
+
+linux dd							# install disk controller driver
+linux text						# text mode
+linux vga=771					# vesa vga
+
+# update FC4 repositories
+
+http://www.fedorafaq.org/fc4/#yumconf
+
+# add GD support to PHP 5
+yum install php-gd
+yum install xmms-mp3
+
+# disable IPV6
+vi /etc/modprobe.conf
+alias ipv6 off
+alias net-pf-10 off
+
+# useful links
+http://stanton-finley.net/fedora_core_4_installation_notes.html#Installation
+
+# signature
+rpm --import gpg-pub-key
+
+# ntfs http://www.fedorafaq.org/#ntfs
+# http://fanqiang.chinaunix.net/system/other/2006-06-27/4705.shtml
+rpm -ivh http://rpm.livna.org/livna-release-5.rpm
+reboot
+yum -y install kmod-ntfs
+
+# method 2:
+http://www.linux-ntfs.org/content/view/128/64/
+download the ntfs module according to your kernel version
+
+# to change network card config
+netsetup
+setup
+vi /etc/sysconfig/network-scripts/ifcfg-ethx
+
+# daily update updatedb
+vi /etc/updatedb.conf
+change DAILY_UPDATE=yes
+
+# after booting the installation cdrom
+# switch to virtual console (hitting ctrl-alt-2)
+# and run  fdisk to partition the harddisk
+# 
+
+# yum tutorial
+http://madpenguin.org/Article918.html
+
+yum check-update
+yum update
+yum provides filename
+yum search package_name
+
+# to exclude packages
+add a line "EXCLUDE=package_name*" in /etc/yum.conf
+man yum.conf for detail
+http://lists.centos.org/pipermail/centos/2005-May/005391.html
+
+# network card
+vi /etc/modprobe.conf
+	alias ethx module_name
+vi /etc/sysconfig/network-scripts/ifcfg-ethx
+
+# enable telnet and vsftpd
+vi /etc/xinetd.d/telnet
+vi /etc/hosts.allow
+
+# bash alias path to sbin
+vi /etc/bashrc
+vi /etc/profile
+
+# firewall rules
+vi /etc/sysconfig/iptables
+service iptables restart
+
+# general setup
+setup
+chkconfig --level 3 init_service_name on/off
+
+# to install mp3 support to xmms
+http://forums.fedoraforum.org/archive/index.php/t-140.html
+
+## install xorg after minimum setup
+$ yum install xorg-x11
+$ yum install xterm
+$ yum install xorg-x11-twm
+$ yum install xorg-x11-75dpi-fonts
+$ yum install xorg-x11-100dpi-fonts
+$ yum install xorg-x11-truetype-fonts
+$ yum install bitstream-vera-fonts
+
+Personally, I don�t care for the �kitchen sink� desktop environments like GNOME and KDE. I prefer something lightweight and fast like XFCE.
+
+$ yum install xfwm4
+$ yum install xfce4-panel
+$ yum install xfdesktop
+$ yum install xfce-utils
+$ yum install xfwm4-themes
+
+# sound
+
+$ yum nstall system-config-soundcard
+$ system-config-soundcard
+
+# recofnigure xorg
+
+system-config-display --reconfig
+Xorg -configure
+
+# VIA FrameBuffer driver
+http://davesdomain.org.uk/viafb/index.php
+
+# re-compile kernel
+yum install yum-utils
+yumdownloader --source kernel \
+	--enablerepo core-source --enablerepo updates-source
+rpm -ivh kernel-2.6.15-1.1955_FC5.src.rpm
+rpmbuild -bp --target=$(uname -m)  /usr/src/redhat/SPECS/kernel-2.6.spec
+
+
+# upgrade from FC4 to FC5
+http://www.brandonhutchinson.com/Upgrading_Red_Hat_Linux_with_yum.html
+
+# Fedora 18 firewall problem
+# http://serverfault.com/questions/470287/how-to-enable-iptablesinstead-of-firewalld-services-on-fedora-18
+systemctl disable firewalld.service
+systemctl stop firewalld.service
+systemctl enable iptables.service
+systemctl enable ip6tables.service
+systemctl start iptables.service
+systemctl start ip6tables.service
+
+# Fedora 18 iptables changes
+# http://forums.gentoo.org/viewtopic-t-940302-start-0.html
+Instead of e.g.:
+-m state --state RELATED	
+Use:
+-m conntrack --ctstate RELATED
